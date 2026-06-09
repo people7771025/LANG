@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LANG 美語與日語自學系統</title>
+  <link rel="icon" href="data:,">
   <style>
     :root {
       --bg: #f7f7f4;
@@ -111,6 +112,18 @@
     }
     .track-btn strong { display: block; font-size: 14px; }
     .track-btn span { display: block; color: #cbd5e1; font-size: 12px; margin-top: 3px; }
+    .track-meta {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .track-meta em {
+      font-style: normal;
+      color: #99f6e4;
+      font-size: 11px;
+      font-weight: 800;
+    }
     .side-stat {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -214,6 +227,43 @@
       gap: 6px;
       flex-wrap: wrap;
     }
+    .quiz-panel {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      gap: 10px;
+    }
+    .quiz-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .quiz-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      padding: 12px;
+      display: grid;
+      gap: 9px;
+    }
+    .quiz-question { font-weight: 800; }
+    .quiz-options {
+      display: grid;
+      gap: 6px;
+    }
+    .quiz-choice {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+    .quiz-choice.ok { border-color: var(--strong); background: var(--strong-soft); color: var(--strong); }
+    .quiz-choice.bad { border-color: var(--red); background: var(--red-soft); color: var(--red); }
     .btn {
       border: 1px solid var(--line);
       background: var(--panel);
@@ -299,7 +349,7 @@
     .rating button.active { background: var(--blue); border-color: var(--blue); color: #fff; }
     .progress-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 10px;
       margin-bottom: 12px;
     }
@@ -320,6 +370,31 @@
       font-size: 12px;
       color: var(--muted);
     }
+    .daily-plan {
+      margin: 12px 0 16px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+    }
+    .daily-plan h3 { margin-bottom: 8px; }
+    .plan-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .plan-step {
+      min-height: 92px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel);
+      display: grid;
+      align-content: start;
+      gap: 4px;
+    }
+    .plan-step b { font-size: 13px; }
+    .plan-step span { color: var(--muted); font-size: 12px; }
     .voice {
       color: var(--muted);
       font-size: 12px;
@@ -343,13 +418,23 @@
       .app { grid-template-columns: 1fr; }
       aside { position: relative; height: auto; }
       .top, .grid { grid-template-columns: 1fr; }
-      .controls, .progress-grid { grid-template-columns: repeat(2, 1fr); }
+      .controls, .progress-grid, .quiz-grid, .plan-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 560px) {
       main { padding: 14px; }
+      .track-list {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scroll-snap-type: x mandatory;
+      }
+      .track-btn {
+        min-width: 260px;
+        scroll-snap-align: start;
+      }
       .intro h2 { font-size: 22px; }
       .target .main-text { font-size: 21px; }
-      .controls, .progress-grid, .rating { grid-template-columns: 1fr; }
+      .controls, .progress-grid, .rating, .quiz-grid, .plan-grid { grid-template-columns: 1fr; }
       .phrase-top, .lab-title, .panel-head { display: block; }
       .phrase-actions { margin-top: 8px; }
     }
@@ -432,6 +517,7 @@
             <span class="badge" id="track-badge">Listening first</span>
           </div>
           <div class="phrase-list" id="phrase-list"></div>
+          <div class="quiz-panel" id="quiz-panel"></div>
         </div>
 
         <div class="panel">
@@ -488,7 +574,11 @@
           <div class="metric"><b id="metric-done">0</b><span>已完成</span></div>
           <div class="metric"><b id="metric-accuracy">0%</b><span>聽寫正確率</span></div>
           <div class="metric"><b id="metric-shadow">0.0</b><span>平均跟讀分</span></div>
+          <div class="metric"><b id="metric-quiz">0</b><span>測驗錯題</span></div>
         </div>
+        <div class="daily-plan" id="daily-plan"></div>
+        <h3>章節錯題</h3>
+        <div class="chips" id="wrong-list"></div>
         <h3>收藏的難句</h3>
         <div class="chips" id="favorite-list"></div>
         <div class="footer-tools">
@@ -511,36 +601,142 @@
         name: "美語",
         speechLang: "en-US",
         title: "American English Listening Path",
-        desc: "先用常用短句建立耳朵：抓重音、連音、弱化音，再進入聽寫與跟讀。",
+        desc: "完整章節版：從日常寒暄、修復聽不懂、點餐旅行，到職場會議、連音弱化、美式發音與短篇聽力。每章都要完成聽、慢聽、聽寫、跟讀與小測驗。",
         tracks: [
           {
             id: "en-daily",
-            title: "Daily small talk",
-            goal: "聽懂自然速度的問候、確認與請求。",
+            title: "01 Daily small talk",
+            level: "A1-A2",
+            goal: "聽懂自然速度的問候、近況與簡短邀約。",
             phrases: [
-              { id: "en-1", text: "How's it going?", display: "How's it going?", zh: "最近怎麼樣？", focus: "How's it 會連成一串，不要逐字聽。", listenFor: "howzit", accepted: ["how's it going", "hows it going"] },
-              { id: "en-2", text: "Could you say that again?", display: "Could you say that again?", zh: "可以再說一次嗎？", focus: "could you 常聽起來像 couldja。", listenFor: "couldja", accepted: ["could you say that again", "couldja say that again"] },
-              { id: "en-3", text: "I'll get back to you later.", display: "I'll get back to you later.", zh: "我晚點回覆你。", focus: "get back to 連音，to 弱化。", listenFor: "get back tuh", accepted: ["i'll get back to you later", "ill get back to you later"] }
+              { id: "en-1", text: "How's it going?", display: "How's it going?", zh: "最近怎麼樣？", focus: "How's it 會連成 howzit，不要逐字聽。", listenFor: "howzit", accepted: ["how's it going", "hows it going"] },
+              { id: "en-2", text: "I'm doing pretty well, thanks.", display: "I'm doing pretty well, thanks.", zh: "我過得蠻好，謝謝。", focus: "pretty well 的 t 常很輕，重音在 well。", listenFor: "priddy well", accepted: ["i'm doing pretty well thanks", "im doing pretty well thanks", "i am doing pretty well thanks"] },
+              { id: "en-3", text: "What have you been up to?", display: "What have you been up to?", zh: "你最近在忙什麼？", focus: "have you been 常被壓縮成很短一段。", listenFor: "whad've yuh been", accepted: ["what have you been up to", "whatve you been up to"] },
+              { id: "en-4", text: "Nothing much, just catching up on work.", display: "Nothing much, just catching up on work.", zh: "沒什麼，補一些工作進度。", focus: "catching up on 連成 catching-upon。", listenFor: "catching up-on", accepted: ["nothing much just catching up on work"] },
+              { id: "en-5", text: "Let's grab coffee sometime.", display: "Let's grab coffee sometime.", zh: "有空一起喝咖啡吧。", focus: "let's grab 的 s-g 連在一起，sometime 不等於 sometimes。", listenFor: "lets-grab", accepted: ["let's grab coffee sometime", "lets grab coffee sometime"] }
+            ],
+            quiz: [
+              { question: "How's it going? 在自然速度最容易聽成哪一段？", choices: ["howzit", "how is sit", "how going"], answer: 0, why: "How's it 會連成 howzit，先抓整段聲音。" },
+              { question: "sometime 和 sometimes 的聽力差異重點是什麼？", choices: ["sometime 是單次或某個時間；sometimes 是有時候", "兩個完全一樣", "sometime 一定有複數 s"], answer: 0, why: "最後是否有 s 會改變意思。" }
+            ]
+          },
+          {
+            id: "en-clarify",
+            title: "02 Clarifying and repair",
+            level: "A1-B1",
+            goal: "聽不懂時能請對方重說、放慢、確認意思。",
+            phrases: [
+              { id: "en-6", text: "Could you say that again?", display: "Could you say that again?", zh: "可以再說一次嗎？", focus: "could you 常聽起來像 couldja。", listenFor: "couldja", accepted: ["could you say that again", "couldja say that again"] },
+              { id: "en-7", text: "What do you mean by that?", display: "What do you mean by that?", zh: "你那句是什麼意思？", focus: "what do you 常弱化成 whaddaya。", listenFor: "whaddaya mean", accepted: ["what do you mean by that", "what d'you mean by that"] },
+              { id: "en-8", text: "I missed the last part.", display: "I missed the last part.", zh: "我漏聽最後那段。", focus: "missed the 的 d-th 連接很輕。", listenFor: "missed-the", accepted: ["i missed the last part"] },
+              { id: "en-9", text: "Could you slow down a little?", display: "Could you slow down a little?", zh: "可以說慢一點嗎？", focus: "down a 連成 down-uh；little 的 t 可變 flap。", listenFor: "down-uh liddle", accepted: ["could you slow down a little", "couldja slow down a little"] },
+              { id: "en-10", text: "Let me make sure I understood.", display: "Let me make sure I understood.", zh: "讓我確認我有理解。", focus: "let me 常縮成 lemme。", listenFor: "lemme make sure", accepted: ["let me make sure i understood", "lemme make sure i understood"] }
+            ],
+            quiz: [
+              { question: "Could you 在口語中常聽起來像？", choices: ["couldja", "could eye", "could too"], answer: 0, why: "d + y 會自然連成 j 的感覺。" },
+              { question: "I missed the last part. 的功能是？", choices: ["說明自己漏聽一段", "表示不喜歡最後一段", "要求對方離開"], answer: 0, why: "這是修復聽不懂時很實用的句子。" }
             ]
           },
           {
             id: "en-cafe",
-            title: "Cafe and travel",
-            goal: "點餐、問路、機場情境的實用聽力。",
+            title: "03 Cafe and restaurants",
+            level: "A1-B1",
+            goal: "點餐、內用外帶、結帳與飲食限制的實用聽力。",
             phrases: [
-              { id: "en-4", text: "Can I get an iced coffee?", display: "Can I get an iced coffee?", zh: "我可以點一杯冰咖啡嗎？", focus: "Can I 常弱化成 k'n I；iced coffee 的 d 可能很輕。", listenFor: "k'n I get", accepted: ["can i get an iced coffee", "can i get iced coffee"] },
-              { id: "en-5", text: "I'm looking for gate B twelve.", display: "I'm looking for gate B12.", zh: "我在找 B12 登機門。", focus: "looking for 的 for 常弱化。", listenFor: "lookin fer", accepted: ["i'm looking for gate b twelve", "im looking for gate b12", "i am looking for gate b twelve"] },
-              { id: "en-6", text: "Is this seat taken?", display: "Is this seat taken?", zh: "這個位子有人坐嗎？", focus: "this seat 兩個 s 靠近，聽成一段。", listenFor: "this-seat", accepted: ["is this seat taken"] }
+              { id: "en-11", text: "Can I get an iced coffee?", display: "Can I get an iced coffee?", zh: "我可以點一杯冰咖啡嗎？", focus: "Can I 常弱化成 k'n I；iced coffee 的 d 可能很輕。", listenFor: "k'n I get", accepted: ["can i get an iced coffee", "can i get iced coffee"] },
+              { id: "en-12", text: "For here or to go?", display: "For here or to go?", zh: "內用還是外帶？", focus: "for / to 都常弱化，真正重音在 here / go。", listenFor: "fer here er tuh go", accepted: ["for here or to go"] },
+              { id: "en-13", text: "Could I have the check, please?", display: "Could I have the check, please?", zh: "可以給我帳單嗎？", focus: "have the 的 v-th 連接很快。", listenFor: "hav-the check", accepted: ["could i have the check please"] },
+              { id: "en-14", text: "Do you have anything without dairy?", display: "Do you have anything without dairy?", zh: "有不含乳製品的嗎？", focus: "do you 常像 d'you；without dairy 兩個 d 靠近。", listenFor: "d'you have", accepted: ["do you have anything without dairy"] },
+              { id: "en-15", text: "That'll be all, thanks.", display: "That'll be all, thanks.", zh: "這樣就好，謝謝。", focus: "that'll be all 會連成一段，all 有重音。", listenFor: "thaddle be all", accepted: ["that'll be all thanks", "that will be all thanks"] }
+            ],
+            quiz: [
+              { question: "For here or to go? 中最該抓的重音是？", choices: ["here / go", "for / to", "or"], answer: 0, why: "功能詞常弱化，選項字通常有重音。" },
+              { question: "without dairy 是在表達什麼需求？", choices: ["不含乳製品", "不要糖", "加大杯"], answer: 0, why: "dairy 指牛奶、起司等乳製品。" }
             ]
           },
           {
-            id: "en-sound",
-            title: "American sound focus",
-            goal: "抓美式 flap T、r 音與句子重音。",
+            id: "en-travel",
+            title: "04 Travel and transport",
+            level: "A2-B1",
+            goal: "機場、登機、延誤、行李與住宿的旅行聽力。",
             phrases: [
-              { id: "en-7", text: "Water sounds better with lemon.", display: "Water sounds better with lemon.", zh: "水加檸檬聽起來更好喝。", focus: "water / better 的 t 常變成 flap，像很快的 d。", listenFor: "wa-der, be-der", accepted: ["water sounds better with lemon"] },
-              { id: "en-8", text: "Really? I heard it was around the corner.", display: "Really? I heard it was around the corner.", zh: "真的嗎？我聽說就在轉角附近。", focus: "r 音要捲進去；around the 常連音。", listenFor: "around-the", accepted: ["really i heard it was around the corner"] },
-              { id: "en-9", text: "I don't think that's what she meant.", display: "I don't think that's what she meant.", zh: "我不覺得她是那個意思。", focus: "don't think 的 t 可能停住不爆破。", listenFor: "don't-think", accepted: ["i don't think that's what she meant", "i dont think thats what she meant"] }
+              { id: "en-16", text: "I'm looking for gate B twelve.", display: "I'm looking for gate B12.", zh: "我在找 B12 登機門。", focus: "looking for 的 for 常弱化；B12 要聽字母與數字。", listenFor: "lookin fer gate bee twelve", accepted: ["i'm looking for gate b twelve", "im looking for gate b12", "i am looking for gate b twelve"] },
+              { id: "en-17", text: "Is this the line for boarding?", display: "Is this the line for boarding?", zh: "這是登機排隊的隊伍嗎？", focus: "this the 會連，line / boarding 是重點。", listenFor: "this-the line", accepted: ["is this the line for boarding"] },
+              { id: "en-18", text: "My flight was delayed.", display: "My flight was delayed.", zh: "我的班機延誤了。", focus: "flight was 的 t-w 交界短，delayed 重音在第二音節。", listenFor: "flight-was delayed", accepted: ["my flight was delayed"] },
+              { id: "en-19", text: "Where can I pick up my luggage?", display: "Where can I pick up my luggage?", zh: "我可以在哪裡領行李？", focus: "can I 常弱化；pick up 連成 pickup。", listenFor: "where k'n I pick-up", accepted: ["where can i pick up my luggage"] },
+              { id: "en-20", text: "Could you recommend a nearby hotel?", display: "Could you recommend a nearby hotel?", zh: "可以推薦附近的飯店嗎？", focus: "recommend a 連成 recommenda，nearby 有重音。", listenFor: "recommenda nearby", accepted: ["could you recommend a nearby hotel"] }
+            ],
+            quiz: [
+              { question: "gate B twelve 需要特別聽哪兩種資訊？", choices: ["字母和數字", "顏色和方向", "姓名和日期"], answer: 0, why: "機場廣播常混合字母與數字。" },
+              { question: "My flight was delayed. 的 delayed 表示？", choices: ["延誤", "取消", "提前"], answer: 0, why: "delay 是延後，不一定取消。" }
+            ]
+          },
+          {
+            id: "en-work",
+            title: "05 Work and meetings",
+            level: "B1",
+            goal: "聽懂會議裡的數字、下一步、期限與 recap。",
+            phrases: [
+              { id: "en-21", text: "Let's circle back after the meeting.", display: "Let's circle back after the meeting.", zh: "會後我們再回來討論。", focus: "circle back 是職場片語，不要逐字翻。", listenFor: "circle back", accepted: ["let's circle back after the meeting", "lets circle back after the meeting"] },
+              { id: "en-22", text: "Could you walk me through the numbers?", display: "Could you walk me through the numbers?", zh: "可以帶我看一下這些數字嗎？", focus: "walk me through 是請對方解釋流程或數字。", listenFor: "walk me through", accepted: ["could you walk me through the numbers"] },
+              { id: "en-23", text: "I'll send a quick recap.", display: "I'll send a quick recap.", zh: "我會寄一份簡短摘要。", focus: "send a 連成 senda；recap 重音在 re。", listenFor: "senda quick recap", accepted: ["i'll send a quick recap", "ill send a quick recap"] },
+              { id: "en-24", text: "We need to move the deadline.", display: "We need to move the deadline.", zh: "我們需要調整期限。", focus: "need to 常變 needa；deadline 是關鍵字。", listenFor: "needa move", accepted: ["we need to move the deadline"] },
+              { id: "en-25", text: "What's the next step?", display: "What's the next step?", zh: "下一步是什麼？", focus: "what's the next 常連，next 的 x/t 可能很輕。", listenFor: "what's-the next", accepted: ["what's the next step", "whats the next step"] }
+            ],
+            quiz: [
+              { question: "walk me through the numbers 的意思是？", choices: ["帶我理解這些數字", "陪我走路", "把數字刪掉"], answer: 0, why: "walk someone through 是一步步說明。" },
+              { question: "quick recap 在會議後通常指？", choices: ["簡短摘要", "正式合約", "請假單"], answer: 0, why: "recap 是 recapitalization 以外最常見的會議摘要用法。" }
+            ]
+          },
+          {
+            id: "en-connected",
+            title: "06 Connected speech",
+            level: "B1",
+            goal: "專攻 have to、want to、gonna、should've、kind of 這類壓縮音。",
+            phrases: [
+              { id: "en-26", text: "I have to head out.", display: "I have to head out.", zh: "我得出門了。", focus: "have to 常聽成 hafta。", listenFor: "hafta head-out", accepted: ["i have to head out", "i hafta head out"] },
+              { id: "en-27", text: "Do you want to join us?", display: "Do you want to join us?", zh: "你要加入我們嗎？", focus: "want to 在口語常像 wanna。", listenFor: "wanna join us", accepted: ["do you want to join us", "do you wanna join us"] },
+              { id: "en-28", text: "I'm gonna take a quick break.", display: "I'm gonna take a quick break.", zh: "我要快速休息一下。", focus: "going to 口語壓縮成 gonna。", listenFor: "gonna take-a", accepted: ["i'm gonna take a quick break", "im gonna take a quick break", "i am going to take a quick break"] },
+              { id: "en-29", text: "We should've checked earlier.", display: "We should've checked earlier.", zh: "我們早該檢查的。", focus: "should've 聽起來像 should-uhv，不是 should of。", listenFor: "should-uv", accepted: ["we should've checked earlier", "we should have checked earlier"] },
+              { id: "en-30", text: "It's kind of hard to explain.", display: "It's kind of hard to explain.", zh: "這有點難解釋。", focus: "kind of 常壓縮成 kinda。", listenFor: "kinda hard", accepted: ["it's kind of hard to explain", "its kind of hard to explain", "it's kinda hard to explain"] }
+            ],
+            quiz: [
+              { question: "have to 在自然口語常聽成？", choices: ["hafta", "have toe", "half two"], answer: 0, why: "f/v 到 t 的快速轉換會形成 hafta 的感覺。" },
+              { question: "should've 正確展開是？", choices: ["should have", "should of", "should if"], answer: 0, why: "聽起來像 should of，但意思與文法是 should have。" }
+            ]
+          },
+          {
+            id: "en-pronunciation",
+            title: "07 American sound focus",
+            level: "B1-B2",
+            goal: "抓 flap T、R/L、字尾音與句子重音。",
+            phrases: [
+              { id: "en-31", text: "Water sounds better with lemon.", display: "Water sounds better with lemon.", zh: "水加檸檬聽起來更好喝。", focus: "water / better 的 t 常變成 flap，像很快的 d。", listenFor: "wa-der, be-der", accepted: ["water sounds better with lemon"] },
+              { id: "en-32", text: "I bought a little bottle of water.", display: "I bought a little bottle of water.", zh: "我買了一小瓶水。", focus: "little / bottle 的 t 常變 flap；bought 的 t 可能停住。", listenFor: "liddle boddle", accepted: ["i bought a little bottle of water"] },
+              { id: "en-33", text: "Really? I heard it was around the corner.", display: "Really? I heard it was around the corner.", zh: "真的嗎？我聽說就在轉角附近。", focus: "r 音要捲進去；around the 常連音。", listenFor: "around-the", accepted: ["really i heard it was around the corner"] },
+              { id: "en-34", text: "Please read it one more time.", display: "Please read it one more time.", zh: "請再讀一次。", focus: "read it 的 d-it 連音，one more time 重音清楚。", listenFor: "read-it", accepted: ["please read it one more time"] },
+              { id: "en-35", text: "The right light is still on.", display: "The right light is still on.", zh: "右邊那盞燈還亮著。", focus: "right / light 是 r/l 對比，字首差異決定意思。", listenFor: "right light", accepted: ["the right light is still on"] }
+            ],
+            quiz: [
+              { question: "美式 water / better 裡的 t 常變成？", choices: ["flap，像很快的 d", "完全消失且沒有痕跡", "固定讀成 ch"], answer: 0, why: "flap T 是美語聽力很核心的聲音。" },
+              { question: "right / light 的主要聽力差異是？", choices: ["字首 r/l", "母音長短", "最後 t 有無發音"], answer: 0, why: "r/l 影響整個單字辨識。" }
+            ]
+          },
+          {
+            id: "en-news",
+            title: "08 Short news and stories",
+            level: "B1-B2",
+            goal: "用一句新聞/故事式句子訓練資訊抓取。",
+            phrases: [
+              { id: "en-36", text: "The forecast says it'll rain after lunch.", display: "The forecast says it'll rain after lunch.", zh: "天氣預報說午餐後會下雨。", focus: "forecast / after lunch 是資訊點；it'll 常像 it'll/iddle。", listenFor: "it'll rain", accepted: ["the forecast says it'll rain after lunch", "the forecast says it will rain after lunch"] },
+              { id: "en-37", text: "A customer called about a missing order.", display: "A customer called about a missing order.", zh: "有顧客打來詢問遺失訂單。", focus: "called about 連音；missing order 是核心資訊。", listenFor: "called-about", accepted: ["a customer called about a missing order"] },
+              { id: "en-38", text: "The train leaves in about ten minutes.", display: "The train leaves in about ten minutes.", zh: "火車大約十分鐘後離開。", focus: "leaves in about 連成 leaves-in-about。", listenFor: "leaves-in-about", accepted: ["the train leaves in about ten minutes"] },
+              { id: "en-39", text: "She said the office was closed today.", display: "She said the office was closed today.", zh: "她說辦公室今天關閉。", focus: "said the / was closed 都很短，today 是時間點。", listenFor: "said-the office", accepted: ["she said the office was closed today"] },
+              { id: "en-40", text: "I don't think that's what she meant.", display: "I don't think that's what she meant.", zh: "我不覺得她是那個意思。", focus: "don't think 的 t 可能停住不爆破。", listenFor: "don't-think", accepted: ["i don't think that's what she meant", "i dont think thats what she meant"] }
+            ],
+            quiz: [
+              { question: "The forecast says it'll rain after lunch. 要先抓哪個資訊？", choices: ["時間與天氣：after lunch / rain", "人名", "價格"], answer: 0, why: "短篇聽力先抓主事件與時間。" },
+              { question: "missing order 指的是？", choices: ["遺失或沒收到的訂單", "已完成訂單", "折扣碼"], answer: 0, why: "missing 表示不見或缺少。" }
             ]
           }
         ]
@@ -550,36 +746,142 @@
         name: "日語",
         speechLang: "ja-JP",
         title: "Japanese Listening Path",
-        desc: "從短句開始建立耳朵：先聽音節長短、促音、助詞，再做聽寫與跟讀。",
+        desc: "完整章節版：從問候、自我介紹、請求確認、店家交通，到時間安排、助詞辨識、長音/促音/拗音與日常短對話。每章都配合聽寫、跟讀與測驗。",
         tracks: [
           {
             id: "ja-greeting",
-            title: "問候與自我介紹",
+            title: "01 問候與自我介紹",
+            level: "N5",
             goal: "聽懂日常開場、自我介紹與基本寒暄。",
             phrases: [
               { id: "ja-1", text: "はじめまして。", display: "はじめまして。", roman: "hajimemashite", zh: "初次見面。", focus: "注意 shi-te 的節奏，不要拖太長。", listenFor: "ha-ji-me-ma-shi-te", accepted: ["はじめまして", "hajimemashite"] },
               { id: "ja-2", text: "よろしくお願いします。", display: "よろしくお願いします。", roman: "yoroshiku onegaishimasu", zh: "請多指教。", focus: "ます 的 u 常很輕。", listenFor: "onegaishimas", accepted: ["よろしくお願いします", "yoroshiku onegaishimasu", "yoroshiku onegaishimas"] },
-              { id: "ja-3", text: "お名前は何ですか。", display: "お名前は何ですか。", roman: "onamae wa nan desu ka", zh: "請問你叫什麼名字？", focus: "は 在這裡讀 wa；です 的 u 很輕。", listenFor: "wa, des ka", accepted: ["お名前は何ですか", "onamae wa nan desu ka"] }
+              { id: "ja-3", text: "お名前は何ですか。", display: "お名前は何ですか。", roman: "onamae wa nan desu ka", zh: "請問你叫什麼名字？", focus: "は 在這裡讀 wa；です 的 u 很輕。", listenFor: "wa, des ka", accepted: ["お名前は何ですか", "onamae wa nan desu ka"] },
+              { id: "ja-4", text: "台湾から来ました。", display: "台湾から来ました。", roman: "taiwan kara kimashita", zh: "我從台灣來。", focus: "から 表示來源；来ました 的 ました 要聽成短短一段。", listenFor: "kara kimashita", accepted: ["台湾から来ました", "taiwan kara kimashita"] },
+              { id: "ja-5", text: "日本語を勉強しています。", display: "日本語を勉強しています。", roman: "nihongo o benkyou shite imasu", zh: "我正在學日語。", focus: "を 讀 o；しています 常連得很快。", listenFor: "benkyou shite imasu", accepted: ["日本語を勉強しています", "nihongo o benkyou shite imasu", "nihongo wo benkyou shite imasu"] }
+            ],
+            quiz: [
+              { question: "お名前は何ですか。裡的 は 要讀作？", choices: ["wa", "ha", "o"], answer: 0, why: "作助詞時 は 讀 wa。" },
+              { question: "よろしくお願いします。最後的 ます 在自然口語常怎麼聽？", choices: ["u 很輕，接近 masu/mas", "一定清楚讀成 ma-su-u", "完全變成 desu"], answer: 0, why: "日語句尾 u 常弱化。" }
             ]
           },
           {
             id: "ja-request",
-            title: "請求與確認",
+            title: "02 請求與確認",
+            level: "N5-N4",
             goal: "聽懂請對方重說、放慢與確認意思。",
             phrases: [
-              { id: "ja-4", text: "すみません、もう一度お願いします。", display: "すみません、もう一度お願いします。", roman: "sumimasen, mou ichido onegaishimasu", zh: "不好意思，請再說一次。", focus: "もう 是長音；一度的 chi-do 要清楚。", listenFor: "mou ichi-do", accepted: ["すみませんもう一度お願いします", "sumimasen mou ichido onegaishimasu"] },
-              { id: "ja-5", text: "ゆっくり話してください。", display: "ゆっくり話してください。", roman: "yukkuri hanashite kudasai", zh: "請慢慢說。", focus: "ゆっくり 有促音，小停頓很重要。", listenFor: "yu-kku-ri", accepted: ["ゆっくり話してください", "yukkuri hanashite kudasai"] },
-              { id: "ja-6", text: "これはどういう意味ですか。", display: "これはどういう意味ですか。", roman: "kore wa dou iu imi desu ka", zh: "這是什麼意思？", focus: "どういう 常連得很快。", listenFor: "dou-iu", accepted: ["これはどういう意味ですか", "kore wa dou iu imi desu ka"] }
+              { id: "ja-6", text: "すみません、もう一度お願いします。", display: "すみません、もう一度お願いします。", roman: "sumimasen, mou ichido onegaishimasu", zh: "不好意思，請再說一次。", focus: "もう 是長音；一度的 chi-do 要清楚。", listenFor: "mou ichi-do", accepted: ["すみませんもう一度お願いします", "sumimasen mou ichido onegaishimasu"] },
+              { id: "ja-7", text: "ゆっくり話してください。", display: "ゆっくり話してください。", roman: "yukkuri hanashite kudasai", zh: "請慢慢說。", focus: "ゆっくり 有促音，小停頓很重要。", listenFor: "yu-kku-ri", accepted: ["ゆっくり話してください", "yukkuri hanashite kudasai"] },
+              { id: "ja-8", text: "これはどういう意味ですか。", display: "これはどういう意味ですか。", roman: "kore wa dou iu imi desu ka", zh: "這是什麼意思？", focus: "どういう 常連得很快。", listenFor: "dou-iu", accepted: ["これはどういう意味ですか", "kore wa dou iu imi desu ka"] },
+              { id: "ja-9", text: "ちょっと分かりません。", display: "ちょっと分かりません。", roman: "chotto wakarimasen", zh: "我有點不懂。", focus: "ちょっと 有促音，小停頓後再出 to。", listenFor: "cho-tto", accepted: ["ちょっと分かりません", "chotto wakarimasen"] },
+              { id: "ja-10", text: "ここに書いてもらえますか。", display: "ここに書いてもらえますか。", roman: "koko ni kaite moraemasu ka", zh: "可以寫在這裡嗎？", focus: "書いてもらえますか 是一串請求句，先抓 kaite。", listenFor: "kaite moraemasu ka", accepted: ["ここに書いてもらえますか", "koko ni kaite moraemasu ka"] }
+            ],
+            quiz: [
+              { question: "ゆっくり 的促音要怎麼聽？", choices: ["中間有小停頓", "完全拉長 yu", "變成 yuri"], answer: 0, why: "促音是短暫停頓，不是單純拉長。" },
+              { question: "もう一度お願いします。主要用途是？", choices: ["請對方再說一次", "請對方付錢", "表示告別"], answer: 0, why: "もう一度 是再一次。" }
             ]
           },
           {
-            id: "ja-town",
-            title: "店家與交通",
-            goal: "在店家、車站與街上能聽懂基本互動。",
+            id: "ja-shop",
+            title: "03 店家與餐廳",
+            level: "N5-N4",
+            goal: "在店家、餐廳與結帳時能聽懂基本互動。",
             phrases: [
-              { id: "ja-7", text: "これをください。", display: "これをください。", roman: "kore o kudasai", zh: "請給我這個。", focus: "を 在口語中多讀 o。", listenFor: "kore o", accepted: ["これをください", "kore o kudasai", "kore wo kudasai"] },
-              { id: "ja-8", text: "駅はどこですか。", display: "駅はどこですか。", roman: "eki wa doko desu ka", zh: "車站在哪裡？", focus: "は 讀 wa；どこですか 節奏短。", listenFor: "eki wa", accepted: ["駅はどこですか", "eki wa doko desu ka"] },
-              { id: "ja-9", text: "お会計お願いします。", display: "お会計お願いします。", roman: "okaikei onegaishimasu", zh: "麻煩結帳。", focus: "お会計 是長一點的詞，先抓 o-kai-kei。", listenFor: "o-kai-kei", accepted: ["お会計お願いします", "okaikei onegaishimasu", "okaikei onegaishimas"] }
+              { id: "ja-11", text: "これをください。", display: "これをください。", roman: "kore o kudasai", zh: "請給我這個。", focus: "を 在口語中多讀 o。", listenFor: "kore o", accepted: ["これをください", "kore o kudasai", "kore wo kudasai"] },
+              { id: "ja-12", text: "おすすめは何ですか。", display: "おすすめは何ですか。", roman: "osusume wa nan desu ka", zh: "推薦的是什麼？", focus: "おすすめ 是店家常聽到的關鍵詞。", listenFor: "osusume wa", accepted: ["おすすめは何ですか", "osusume wa nan desu ka"] },
+              { id: "ja-13", text: "お会計お願いします。", display: "お会計お願いします。", roman: "okaikei onegaishimasu", zh: "麻煩結帳。", focus: "お会計 是長一點的詞，先抓 o-kai-kei。", listenFor: "o-kai-kei", accepted: ["お会計お願いします", "okaikei onegaishimasu", "okaikei onegaishimas"] },
+              { id: "ja-14", text: "袋は要りません。", display: "袋は要りません。", roman: "fukuro wa irimasen", zh: "我不需要袋子。", focus: "要りません 是否定，不要只聽到 要り。", listenFor: "irimasen", accepted: ["袋は要りません", "fukuro wa irimasen"] },
+              { id: "ja-15", text: "クレジットカードは使えますか。", display: "クレジットカードは使えますか。", roman: "kurejitto kaado wa tsukaemasu ka", zh: "可以使用信用卡嗎？", focus: "カード 是長音；使えますか 是是否可用。", listenFor: "kaado wa tsukaemasu ka", accepted: ["クレジットカードは使えますか", "kurejitto kaado wa tsukaemasu ka"] }
+            ],
+            quiz: [
+              { question: "袋は要りません。表示？", choices: ["不需要袋子", "需要大袋子", "袋子很貴"], answer: 0, why: "要りません 是不需要。" },
+              { question: "クレジットカード 的 カード 有什麼聲音重點？", choices: ["長音", "促音", "拗音"], answer: 0, why: "カード 的 ー 要拉長一拍。" }
+            ]
+          },
+          {
+            id: "ja-transport",
+            title: "04 交通與方向",
+            level: "N5-N4",
+            goal: "在車站、公車與街上能聽懂方向、時間與轉乘。",
+            phrases: [
+              { id: "ja-16", text: "駅はどこですか。", display: "駅はどこですか。", roman: "eki wa doko desu ka", zh: "車站在哪裡？", focus: "は 讀 wa；どこですか 節奏短。", listenFor: "eki wa", accepted: ["駅はどこですか", "eki wa doko desu ka"] },
+              { id: "ja-17", text: "次の電車は何時ですか。", display: "次の電車は何時ですか。", roman: "tsugi no densha wa nanji desu ka", zh: "下一班電車是幾點？", focus: "次の電車 是一組資訊，何時 是時間。", listenFor: "nanji desu ka", accepted: ["次の電車は何時ですか", "tsugi no densha wa nanji desu ka"] },
+              { id: "ja-18", text: "このバスは渋谷に行きますか。", display: "このバスは渋谷に行きますか。", roman: "kono basu wa shibuya ni ikimasu ka", zh: "這班公車會去澀谷嗎？", focus: "バスは 的 su wa 很短；渋谷是地名重點。", listenFor: "shibuya ni ikimasu ka", accepted: ["このバスは渋谷に行きますか", "kono basu wa shibuya ni ikimasu ka"] },
+              { id: "ja-19", text: "ここで降ります。", display: "ここで降ります。", roman: "koko de orimasu", zh: "我在這裡下車。", focus: "で 是地點助詞；降ります 的 ri 要清楚。", listenFor: "koko de", accepted: ["ここで降ります", "koko de orimasu"] },
+              { id: "ja-20", text: "乗り換えはありますか。", display: "乗り換えはありますか。", roman: "norikae wa arimasu ka", zh: "需要轉乘嗎？", focus: "乗り換え 是轉乘，ありますか 問有沒有。", listenFor: "norikae wa", accepted: ["乗り換えはありますか", "norikae wa arimasu ka"] }
+            ],
+            quiz: [
+              { question: "何時ですか。是在問？", choices: ["幾點", "哪裡", "多少錢"], answer: 0, why: "何時 是時間。" },
+              { question: "乗り換え 的意思是？", choices: ["轉乘", "下雨", "結帳"], answer: 0, why: "交通情境中常聽到 norikae。" }
+            ]
+          },
+          {
+            id: "ja-schedule",
+            title: "05 時間與約定",
+            level: "N4",
+            goal: "聽懂約時間、預約、遲到與改期。",
+            phrases: [
+              { id: "ja-21", text: "明日の午後は空いていますか。", display: "明日の午後は空いていますか。", roman: "ashita no gogo wa aite imasu ka", zh: "明天下午有空嗎？", focus: "明日 / 午後 / 空いています 是三個資訊點。", listenFor: "gogo wa aite imasu ka", accepted: ["明日の午後は空いていますか", "ashita no gogo wa aite imasu ka"] },
+              { id: "ja-22", text: "三時に予約があります。", display: "三時に予約があります。", roman: "sanji ni yoyaku ga arimasu", zh: "我三點有預約。", focus: "三時に 是時間；予約 是預約。", listenFor: "sanji ni yoyaku", accepted: ["三時に予約があります", "sanji ni yoyaku ga arimasu"] },
+              { id: "ja-23", text: "少し遅れます。", display: "少し遅れます。", roman: "sukoshi okuremasu", zh: "我會稍微晚到。", focus: "遅れます 是晚到/延遲，句尾 masu 很輕。", listenFor: "okuremasu", accepted: ["少し遅れます", "sukoshi okuremasu"] },
+              { id: "ja-24", text: "今週の金曜日はどうですか。", display: "今週の金曜日はどうですか。", roman: "konshuu no kinyoubi wa dou desu ka", zh: "這週五怎麼樣？", focus: "金曜日 是星期五，どうですか 是詢問是否可行。", listenFor: "kinyoubi wa dou", accepted: ["今週の金曜日はどうですか", "konshuu no kinyoubi wa dou desu ka"] },
+              { id: "ja-25", text: "また連絡します。", display: "また連絡します。", roman: "mata renraku shimasu", zh: "我再聯絡你。", focus: "連絡します 是一組常用語，renraku 不要漏 n。", listenFor: "renraku shimasu", accepted: ["また連絡します", "mata renraku shimasu"] }
+            ],
+            quiz: [
+              { question: "三時に予約があります。裡的 に 表示？", choices: ["時間點", "否定", "原因"], answer: 0, why: "に 常用來標記時間點。" },
+              { question: "少し遅れます。常用於？", choices: ["通知自己會晚到", "表示已經到家", "詢問價格"], answer: 0, why: "遅れます 是遲到或延遲。" }
+            ]
+          },
+          {
+            id: "ja-particles",
+            title: "06 助詞與句型聽力",
+            level: "N4",
+            goal: "專攻 は、が、に、を、まで 等助詞在句子裡的位置與功能。",
+            phrases: [
+              { id: "ja-26", text: "私はコーヒーが好きです。", display: "私はコーヒーが好きです。", roman: "watashi wa koohii ga suki desu", zh: "我喜歡咖啡。", focus: "は 標主題，が 接在喜歡的對象後。", listenFor: "wa, ga", accepted: ["私はコーヒーが好きです", "watashi wa koohii ga suki desu"] },
+              { id: "ja-27", text: "机の上にあります。", display: "机の上にあります。", roman: "tsukue no ue ni arimasu", zh: "在桌子上。", focus: "の 連接名詞；に 標位置。", listenFor: "ue ni", accepted: ["机の上にあります", "tsukue no ue ni arimasu"] },
+              { id: "ja-28", text: "友だちと映画を見ました。", display: "友だちと映画を見ました。", roman: "tomodachi to eiga o mimashita", zh: "我和朋友看了電影。", focus: "と 是和誰；を 讀 o，接動作對象。", listenFor: "to, o", accepted: ["友だちと映画を見ました", "tomodachi to eiga o mimashita", "tomodachi to eiga wo mimashita"] },
+              { id: "ja-29", text: "家まで歩きました。", display: "家まで歩きました。", roman: "ie made arukimashita", zh: "我走路到家。", focus: "まで 表示到某處為止。", listenFor: "made arukimashita", accepted: ["家まで歩きました", "ie made arukimashita"] },
+              { id: "ja-30", text: "朝ご飯を食べませんでした。", display: "朝ご飯を食べませんでした。", roman: "asagohan o tabemasen deshita", zh: "我沒有吃早餐。", focus: "ませんでした 是過去否定，長度較長但很規律。", listenFor: "tabemasen deshita", accepted: ["朝ご飯を食べませんでした", "asagohan o tabemasen deshita", "asagohan wo tabemasen deshita"] }
+            ],
+            quiz: [
+              { question: "映画を見ました。裡的 を 讀作？", choices: ["o", "wo 的完整 w 很重", "ha"], answer: 0, why: "現代口語中 を 多讀 o。" },
+              { question: "ませんでした 表示？", choices: ["過去否定", "現在肯定", "命令"], answer: 0, why: "ませんでした 是「沒有做」的禮貌過去否定。" }
+            ]
+          },
+          {
+            id: "ja-sound",
+            title: "07 長音、促音、拗音",
+            level: "N4-N3",
+            goal: "辨識長短音、促音停頓與拗音，避免聽錯意思。",
+            phrases: [
+              { id: "ja-31", text: "おばさんとおばあさんは違います。", display: "おばさんとおばあさんは違います。", roman: "obasan to obaasan wa chigaimasu", zh: "阿姨和奶奶不一樣。", focus: "おばさん / おばあさん 差在長音。", listenFor: "oba-san, obaa-san", accepted: ["おばさんとおばあさんは違います", "obasan to obaasan wa chigaimasu"] },
+              { id: "ja-32", text: "きってときてを聞き分けます。", display: "きってときてを聞き分けます。", roman: "kitte to kite o kikiwakemasu", zh: "分辨 kitte 和 kite。", focus: "きって 有促音停頓；きて 沒有。", listenFor: "ki-tte, ki-te", accepted: ["きってときてを聞き分けます", "kitte to kite o kikiwakemasu"] },
+              { id: "ja-33", text: "旅行に行きたいです。", display: "旅行に行きたいです。", roman: "ryokou ni ikitai desu", zh: "我想去旅行。", focus: "りょ 是拗音，不是 ri-yo 兩拍。", listenFor: "ryo-kou", accepted: ["旅行に行きたいです", "ryokou ni ikitai desu"] },
+              { id: "ja-34", text: "学校は八時からです。", display: "学校は八時からです。", roman: "gakkou wa hachi ji kara desu", zh: "學校從八點開始。", focus: "学校 有促音與長音；八時要聽時間。", listenFor: "ga-kkou, hachi ji", accepted: ["学校は八時からです", "gakkou wa hachi ji kara desu"] },
+              { id: "ja-35", text: "ビールを一つください。", display: "ビールを一つください。", roman: "biiru o hitotsu kudasai", zh: "請給我一杯啤酒。", focus: "ビール 是長音；一つ 的 hitotsu 要短。", listenFor: "bii-ru", accepted: ["ビールを一つください", "biiru o hitotsu kudasai", "biiru wo hitotsu kudasai"] }
+            ],
+            quiz: [
+              { question: "おばさん / おばあさん 的差異是？", choices: ["長音", "促音", "助詞"], answer: 0, why: "あ 是否拉長會改變意思。" },
+              { question: "きって 的小 っ 表示？", choices: ["促音停頓", "長音", "鼻音"], answer: 0, why: "小 っ 代表一拍停頓。" }
+            ]
+          },
+          {
+            id: "ja-dialogue",
+            title: "08 日常短對話",
+            level: "N4-N3",
+            goal: "用完整但短的日常句訓練抓主題、動作與感想。",
+            phrases: [
+              { id: "ja-36", text: "今日はいい天気ですね。", display: "今日はいい天気ですね。", roman: "kyou wa ii tenki desu ne", zh: "今天天氣真好呢。", focus: "今日は 的 は 讀 wa；ですね 表示共感。", listenFor: "ii tenki desu ne", accepted: ["今日はいい天気ですね", "kyou wa ii tenki desu ne"] },
+              { id: "ja-37", text: "週末は何をしましたか。", display: "週末は何をしましたか。", roman: "shuumatsu wa nani o shimashita ka", zh: "週末做了什麼？", focus: "週末 是長音；何を 是問題核心。", listenFor: "nani o shimashita ka", accepted: ["週末は何をしましたか", "shuumatsu wa nani o shimashita ka", "shuumatsu wa nani wo shimashita ka"] },
+              { id: "ja-38", text: "友だちとご飯を食べました。", display: "友だちとご飯を食べました。", roman: "tomodachi to gohan o tabemashita", zh: "我和朋友吃飯了。", focus: "と 是和誰；ご飯を 是吃的對象。", listenFor: "gohan o tabemashita", accepted: ["友だちとご飯を食べました", "tomodachi to gohan o tabemashita", "tomodachi to gohan wo tabemashita"] },
+              { id: "ja-39", text: "映画はとても面白かったです。", display: "映画はとても面白かったです。", roman: "eiga wa totemo omoshirokatta desu", zh: "電影非常有趣。", focus: "面白かった 是形容詞過去式，音節較長要分段聽。", listenFor: "omoshirokatta", accepted: ["映画はとても面白かったです", "eiga wa totemo omoshirokatta desu"] },
+              { id: "ja-40", text: "また一緒に行きましょう。", display: "また一緒に行きましょう。", roman: "mata issho ni ikimashou", zh: "下次再一起去吧。", focus: "一緒に 是一起；行きましょう 是邀約。", listenFor: "issho ni ikimashou", accepted: ["また一緒に行きましょう", "mata issho ni ikimashou"] }
+            ],
+            quiz: [
+              { question: "週末は何をしましたか。是在問？", choices: ["週末做了什麼", "今天幾點", "在哪裡結帳"], answer: 0, why: "何をしましたか 是做了什麼。" },
+              { question: "行きましょう 的語氣是？", choices: ["一起去吧/邀約", "不要去", "已經去了"], answer: 0, why: "ましょう 常用於邀請一起做某事。" }
             ]
           }
         ]
@@ -594,7 +896,10 @@
       favorites: {},
       dictation: [],
       shadow: {},
+      quizAnswers: {},
+      quizReview: {},
       notes: "",
+      dailyMinutes: 20,
       rate: 1
     };
 
@@ -605,10 +910,27 @@
     function loadState() {
       try {
         const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-        return { ...DEFAULT_STATE, ...(raw || {}) };
+        return ensureStateShape({ ...defaultState(), ...(raw || {}) });
       } catch {
-        return { ...DEFAULT_STATE };
+        return defaultState();
       }
+    }
+    function defaultState() {
+      return JSON.parse(JSON.stringify(DEFAULT_STATE));
+    }
+    function ensureStateShape(next) {
+      next.completed = next.completed || {};
+      next.favorites = next.favorites || {};
+      next.dictation = Array.isArray(next.dictation) ? next.dictation : [];
+      next.shadow = next.shadow || {};
+      next.quizAnswers = next.quizAnswers || {};
+      next.quizReview = next.quizReview || {};
+      if (!LANG_COURSES[next.lang]) next.lang = "en";
+      const langCourse = LANG_COURSES[next.lang];
+      if (!langCourse.tracks.some(t => t.id === next.trackId)) next.trackId = langCourse.tracks[0].id;
+      const activeTrack = langCourse.tracks.find(t => t.id === next.trackId) || langCourse.tracks[0];
+      if (!activeTrack.phrases.some(p => p.id === next.phraseId)) next.phraseId = activeTrack.phrases[0].id;
+      return next;
     }
     function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -618,6 +940,12 @@
     function phrases() { return track().phrases; }
     function phrase() { return phrases().find(p => p.id === state.phraseId) || phrases()[0]; }
     function allPhrases(lang = state.lang) { return LANG_COURSES[lang].tracks.flatMap(t => t.phrases.map(p => ({ ...p, trackTitle: t.title }))); }
+    function quizKey(trackId, index) { return state.lang + ":" + trackId + ":" + index; }
+    function wrongQuizItems(lang = state.lang) {
+      return Object.entries(state.quizReview || {})
+        .map(([key, item]) => ({ key, ...item }))
+        .filter(item => item.lang === lang);
+    }
 
     function normalize(s) {
       return String(s || "")
@@ -710,6 +1038,32 @@
       renderLab();
     }
 
+    function answerQuiz(index, choice) {
+      const q = (track().quiz || [])[index];
+      if (!q) return;
+      const key = quizKey(track().id, index);
+      const ok = choice === q.answer;
+      state.quizAnswers[key] = { lang: state.lang, trackId: track().id, choice, ok, ts: Date.now() };
+      if (ok) {
+        delete state.quizReview[key];
+      } else {
+        state.quizReview[key] = {
+          lang: state.lang,
+          trackId: track().id,
+          trackTitle: track().title,
+          question: q.question,
+          choice,
+          answer: q.answer,
+          choices: q.choices,
+          why: q.why,
+          ts: Date.now()
+        };
+      }
+      saveState();
+      renderQuizPanel();
+      renderProgress();
+    }
+
     function dictationCheck() {
       const input = document.getElementById("dictation-input").value;
       const p = phrase();
@@ -728,6 +1082,7 @@
       renderSidebar();
       renderCourseHeader();
       renderPhraseList();
+      renderQuizPanel();
       renderLab();
       renderProgress();
       renderVoiceStatus();
@@ -742,6 +1097,7 @@
         <button class="track-btn ${t.id === state.trackId ? "active" : ""}" data-track="${t.id}">
           <strong>${t.title}</strong>
           <span>${t.goal}</span>
+          <span class="track-meta"><em>${t.level}</em><em>${t.phrases.length} 句</em><em>${(t.quiz || []).length} 題</em></span>
         </button>
       `).join("");
       list.querySelectorAll("[data-track]").forEach(btn => btn.addEventListener("click", () => setTrack(btn.dataset.track)));
@@ -752,7 +1108,7 @@
       document.getElementById("course-desc").textContent = course().desc;
       document.getElementById("track-title").textContent = track().title;
       document.getElementById("track-goal").textContent = track().goal;
-      document.getElementById("track-badge").textContent = course().name + " Listening";
+      document.getElementById("track-badge").textContent = course().name + " / " + course().tracks.length + " 章 / " + allPhrases().length + " 句";
     }
 
     function renderPhraseList() {
@@ -770,7 +1126,7 @@
               </div>
               <span class="badge">${done ? "Done" : "Listen"}</span>
             </div>
-            <div class="phrase-meta"><strong>聽力焦點：</strong>${p.focus}</div>
+            <div class="phrase-meta"><strong>聽力焦點：</strong>${p.focus} <span class="voice">抓音：${p.listenFor}</span></div>
             <div class="phrase-actions">
               <button class="btn" data-select="${p.id}">Select</button>
               <button class="btn" data-play="${p.id}">Play</button>
@@ -787,6 +1143,46 @@
       }));
       wrap.querySelectorAll("[data-done]").forEach(btn => btn.addEventListener("click", () => markDone(btn.dataset.done)));
       wrap.querySelectorAll("[data-fav]").forEach(btn => btn.addEventListener("click", () => toggleFavorite(btn.dataset.fav)));
+    }
+
+    function renderQuizPanel() {
+      const wrap = document.getElementById("quiz-panel");
+      const qs = track().quiz || [];
+      if (!qs.length) {
+        wrap.innerHTML = "";
+        return;
+      }
+      wrap.innerHTML = `
+        <div class="panel-head">
+          <div>
+            <h3>章節測驗</h3>
+            <p>聽寫與跟讀後作答；答錯會進入錯題複習。</p>
+          </div>
+          <span class="badge">${qs.length} 題</span>
+        </div>
+        <div class="quiz-grid">
+          ${qs.map((q, idx) => {
+            const saved = state.quizAnswers[quizKey(track().id, idx)];
+            return `
+              <div class="quiz-card">
+                <div class="quiz-question">${idx + 1}. ${q.question}</div>
+                <div class="quiz-options">
+                  ${q.choices.map((choice, choiceIdx) => {
+                    let cls = "";
+                    if (saved && choiceIdx === q.answer) cls = "ok";
+                    if (saved && choiceIdx === saved.choice && !saved.ok) cls = "bad";
+                    return `<button class="quiz-choice ${cls}" data-quiz="${idx}" data-choice="${choiceIdx}">${choice}</button>`;
+                  }).join("")}
+                </div>
+                ${saved ? `<div class="result ${saved.ok ? "ok" : "bad"}">${saved.ok ? "答對。" : "答錯，已加入錯題。"} ${q.why}</div>` : `<div class="voice">尚未作答。</div>`}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+      wrap.querySelectorAll("[data-quiz]").forEach(btn => {
+        btn.addEventListener("click", () => answerQuiz(Number(btn.dataset.quiz), Number(btn.dataset.choice)));
+      });
     }
 
     function renderLab() {
@@ -829,7 +1225,10 @@
       document.getElementById("metric-done").textContent = done;
       document.getElementById("metric-accuracy").textContent = acc + "%";
       document.getElementById("metric-shadow").textContent = shadowAvg.toFixed(1);
+      document.getElementById("metric-quiz").textContent = wrongQuizItems().length;
       document.getElementById("session-label").textContent = course().name;
+      renderDailyPlan();
+      renderWrongList();
       const favs = allPhrases().filter(p => state.favorites[p.id]);
       const favBox = document.getElementById("favorite-list");
       favBox.innerHTML = favs.length ? favs.map(p => `<button class="chip" data-jump="${p.id}">${p.display}</button>`).join("") : `<span class="chip">尚未收藏難句</span>`;
@@ -841,6 +1240,53 @@
         render();
         window.scrollTo({ top: 0, behavior: "smooth" });
       }));
+    }
+
+    function renderDailyPlan() {
+      const all = allPhrases();
+      const unfinished = all.filter(p => !state.completed[p.id]);
+      const favs = all.filter(p => state.favorites[p.id]);
+      const target = [...unfinished.slice(0, 3), ...favs.slice(0, 2)].filter((p, idx, arr) => arr.findIndex(x => x.id === p.id) === idx).slice(0, 5);
+      const fallback = target.length ? target : all.slice(0, 5);
+      const plan = [
+        { title: "1. 盲聽", text: "不看字聽 2 回，先抓重音與關鍵詞。" },
+        { title: "2. 慢聽", text: "用 Slow 對齊弱化音、長音或促音。" },
+        { title: "3. 聽寫", text: "輸入聽到的內容，錯了立刻重聽。" },
+        { title: "4. 跟讀", text: "Loop x3 後自評 1-5 分。" },
+        { title: "5. 回收", text: "重做錯題與收藏難句。" }
+      ];
+      const box = document.getElementById("daily-plan");
+      box.innerHTML = `
+        <h3>今日 ${state.dailyMinutes} 分鐘聽力計畫</h3>
+        <div class="plan-grid">
+          ${plan.map(step => `<div class="plan-step"><b>${step.title}</b><span>${step.text}</span></div>`).join("")}
+        </div>
+        <div class="voice" style="margin-top:10px;">建議短句：${fallback.map(p => `<button class="chip" data-plan-jump="${p.id}">${p.display}</button>`).join(" ")}</div>
+      `;
+      box.querySelectorAll("[data-plan-jump]").forEach(btn => btn.addEventListener("click", () => jumpToPhrase(btn.dataset.planJump)));
+    }
+
+    function renderWrongList() {
+      const wrongs = wrongQuizItems();
+      const box = document.getElementById("wrong-list");
+      box.innerHTML = wrongs.length ? wrongs.map(item => `<button class="chip" data-wrong-track="${item.trackId}">${item.trackTitle}: ${item.question}</button>`).join("") : `<span class="chip">目前沒有章節錯題</span>`;
+      box.querySelectorAll("[data-wrong-track]").forEach(btn => btn.addEventListener("click", () => {
+        state.trackId = btn.dataset.wrongTrack;
+        const t = track();
+        state.phraseId = t.phrases[0].id;
+        saveState();
+        render();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }));
+    }
+
+    function jumpToPhrase(id) {
+      const foundTrack = course().tracks.find(t => t.phrases.some(p => p.id === id));
+      if (foundTrack) state.trackId = foundTrack.id;
+      state.phraseId = id;
+      saveState();
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function renderVoiceStatus() {
@@ -862,15 +1308,20 @@
       const favs = all.filter(p => state.favorites[p.id]);
       const dict = state.dictation.filter(x => x.lang === state.lang);
       const correct = dict.filter(x => x.ok).length;
+      const wrongs = wrongQuizItems();
       const lines = [];
       lines.push("# LANG 學習紀錄");
       lines.push("");
       lines.push(`- 語言：${course().name}`);
       lines.push(`- 完成：${done.length} / ${all.length}`);
       lines.push(`- 聽寫：${correct} / ${dict.length || 0}`);
+      lines.push(`- 章節錯題：${wrongs.length}`);
       lines.push("");
       lines.push("## 已完成短句");
       done.forEach(p => lines.push(`- ${p.display} — ${p.zh}`));
+      lines.push("");
+      lines.push("## 章節錯題");
+      wrongs.forEach(item => lines.push(`- ${item.trackTitle}: ${item.question} / 正解：${item.choices[item.answer]}`));
       lines.push("");
       lines.push("## 收藏難句");
       favs.forEach(p => lines.push(`- ${p.display} (${p.roman || p.listenFor}) — ${p.focus}`));
@@ -885,7 +1336,7 @@
     function resetProgress() {
       if (!confirm("清除 LANG 所有進度？")) return;
       localStorage.removeItem(STORAGE_KEY);
-      state = { ...DEFAULT_STATE };
+      state = defaultState();
       revealText = false;
       render();
     }

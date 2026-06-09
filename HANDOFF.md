@@ -4,7 +4,7 @@
 
 - 單檔 HTML：`index.html`
 - 離線可開、無 build step、無 npm
-- 主題：美語與日語自學，第一版把「聽力」放在核心，而不是只做文字教材
+- 主題：美語與日語自學，v1 完整章節版把「聽力」放在核心，而不是只做文字教材
 - 狀態：localStorage
 
 ## 檔案
@@ -16,7 +16,7 @@
 
 ## localStorage keys
 
-- `lang/state`：目前語言、課程、選中短句、設定、完成/收藏/分數/筆記
+- `lang/state`：目前語言、課程、選中短句、設定、完成/收藏/分數/測驗/錯題/筆記
 
 ## 互動模組
 
@@ -27,7 +27,22 @@
   - Loop x3：循環三次
   - Dictation：聽寫後比對標準答案與 accepted aliases
   - Shadowing：使用者自評 1-5 分
+- 章節測驗：
+  - 每章 2 題
+  - `quizAnswers` 記錄作答結果
+  - `quizReview` 保存錯題，答對後移出錯題
+- 每日 20 分鐘計畫：
+  - 盲聽
+  - 慢聽
+  - 聽寫
+  - 跟讀
+  - 錯題/收藏回收
 - Export：複製 Markdown 學習紀錄
+
+## 課程規模
+
+- 美語：8 章、40 句、16 題測驗
+- 日語：8 章、40 句、16 題測驗
 
 ## 課程資料結構
 
@@ -36,8 +51,10 @@
 ```js
 {
   id, name, lang, speechLang, tracks: [
-    { id, title, goal, phrases: [
+    { id, title, level, goal, phrases: [
       { id, text, display, roman, zh, focus, listenFor, accepted }
+    ], quiz: [
+      { question, choices, answer, why }
     ] }
   ]
 }
