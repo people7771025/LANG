@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LANG 美語與日語自學系統</title>
+  <style>
+    :root {
+      --bg: #f7f7f4;
+      --panel: #ffffff;
+      --panel-2: #f0f3f5;
+      --ink: #17202a;
+      --muted: #667085;
+      --subtle: #98a2b3;
+      --line: #d8dee4;
+      --strong: #0f766e;
+      --strong-soft: #dff3ef;
+      --blue: #2563eb;
+      --blue-soft: #e8efff;
+      --red: #be123c;
+      --red-soft: #fde7ee;
+      --warn: #b45309;
+      --warn-soft: #fff1d6;
+      --radius: 8px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    .app {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 18px;
+      background: #111827;
+      color: #f8fafc;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background: #f8fafc;
+      color: #111827;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-family: var(--mono);
+    }
+    .brand h1 { margin: 0; font-size: 22px; line-height: 1; }
+    .brand p { margin: 4px 0 0; color: #cbd5e1; font-size: 12px; }
+    .side-label {
+      margin: 18px 0 8px;
+      color: #9ca3af;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .seg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 4px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+    }
+    .seg button {
+      border: 0;
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: transparent;
+      color: #d1d5db;
+      font-weight: 700;
+    }
+    .seg button.active { background: #f8fafc; color: #111827; }
+    .track-list { display: grid; gap: 8px; }
+    .track-btn {
+      width: 100%;
+      text-align: left;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.05);
+      color: #e5e7eb;
+      padding: 10px 12px;
+    }
+    .track-btn.active {
+      border-color: #5eead4;
+      background: rgba(45,212,191,.12);
+      color: #fff;
+    }
+    .track-btn strong { display: block; font-size: 14px; }
+    .track-btn span { display: block; color: #cbd5e1; font-size: 12px; margin-top: 3px; }
+    .side-stat {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .side-stat div {
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.05);
+    }
+    .side-stat b { display: block; color: #fff; font-size: 20px; font-family: var(--mono); }
+    .side-stat span { color: #cbd5e1; font-size: 11px; }
+    main {
+      min-width: 0;
+      padding: 24px;
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 20px;
+    }
+    .intro, .signal-panel, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .intro h2 { margin: 0; font-size: 28px; }
+    .intro p { margin: 8px 0 0; color: var(--muted); max-width: 72ch; }
+    .signal-panel {
+      display: grid;
+      align-content: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+    .signal-panel svg { width: 100%; height: 120px; display: block; }
+    .wave rect { transform-origin: bottom; animation: idle 1.8s ease-in-out infinite; }
+    .wave rect:nth-child(2) { animation-delay: .1s; }
+    .wave rect:nth-child(3) { animation-delay: .2s; }
+    .wave rect:nth-child(4) { animation-delay: .3s; }
+    .wave rect:nth-child(5) { animation-delay: .4s; }
+    body.speaking .wave rect { animation-duration: .55s; }
+    @keyframes idle {
+      0%, 100% { transform: scaleY(.45); }
+      50% { transform: scaleY(1); }
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .panel h2, .panel h3 { margin: 0; }
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .panel-head p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 800;
+      background: var(--strong-soft);
+      color: var(--strong);
+      white-space: nowrap;
+    }
+    .phrase-list { display: grid; gap: 10px; }
+    .phrase {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+    .phrase.active { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-soft); }
+    .phrase-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .phrase-title { font-weight: 800; font-size: 17px; }
+    .phrase-meta { color: var(--muted); font-size: 13px; }
+    .phrase-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .btn.primary { background: var(--strong); border-color: var(--strong); color: #fff; }
+    .btn.blue { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .btn.danger { color: var(--red); border-color: var(--red); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .lab-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+    .target {
+      padding: 14px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+    }
+    .target .main-text {
+      font-size: 26px;
+      font-weight: 900;
+      line-height: 1.25;
+      margin-bottom: 4px;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+    .target.hidden .main-text {
+      filter: blur(7px);
+      user-select: none;
+    }
+    .roman { color: var(--blue); font-family: var(--mono); font-size: 14px; }
+    .zh { color: var(--muted); margin-top: 4px; }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .dictation {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      background: #fff;
+      color: var(--ink);
+    }
+    textarea { min-height: 74px; resize: vertical; }
+    .result {
+      min-height: 36px;
+      padding: 9px 10px;
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .result.ok { background: var(--strong-soft); color: var(--strong); }
+    .result.bad { background: var(--red-soft); color: var(--red); }
+    .shadow {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+    .rating {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .rating button.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .progress-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .metric {
+      padding: 12px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+    .metric b { display: block; font-size: 23px; font-family: var(--mono); }
+    .metric span { color: var(--muted); font-size: 12px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 9px;
+      background: #fff;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .voice {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .footer-tools {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .notice {
+      padding: 10px 12px;
+      background: var(--warn-soft);
+      border: 1px solid #f1c27d;
+      color: #7c3e08;
+      border-radius: var(--radius);
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      aside { position: relative; height: auto; }
+      .top, .grid { grid-template-columns: 1fr; }
+      .controls, .progress-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 560px) {
+      main { padding: 14px; }
+      .intro h2 { font-size: 22px; }
+      .target .main-text { font-size: 21px; }
+      .controls, .progress-grid, .rating { grid-template-columns: 1fr; }
+      .phrase-top, .lab-title, .panel-head { display: block; }
+      .phrase-actions { margin-top: 8px; }
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --panel: #172033;
+        --panel-2: #111827;
+        --ink: #f8fafc;
+        --muted: #b5c0d0;
+        --subtle: #748094;
+        --line: #2f3b52;
+        --strong-soft: #123b36;
+        --blue-soft: #172c58;
+        --red-soft: #4a1524;
+        --warn-soft: #3a2713;
+      }
+      textarea, input[type="text"], .chip { background: #0f172a; color: var(--ink); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand">
+        <div class="brand-mark">LA</div>
+        <div>
+          <h1>LANG</h1>
+          <p>美語與日語聽力自學</p>
+        </div>
+      </div>
+
+      <div class="side-label">Language</div>
+      <div class="seg" id="language-tabs">
+        <button data-lang="en" class="active">美語</button>
+        <button data-lang="ja">日語</button>
+      </div>
+
+      <div class="side-label">Courses</div>
+      <div class="track-list" id="track-list"></div>
+
+      <div class="side-label">Progress</div>
+      <div class="side-stat">
+        <div><b id="side-done">0</b><span>完成短句</span></div>
+        <div><b id="side-acc">0%</b><span>聽寫正確率</span></div>
+      </div>
+      <div class="notice" id="speech-warning" hidden></div>
+    </aside>
+
+    <main>
+      <section class="top">
+        <div class="intro">
+          <h2 id="course-title">LANG 美語與日語自學系統</h2>
+          <p id="course-desc">用短句反覆聽、聽寫、跟讀。第一版先建立每天可用的聽力訓練流程，再逐步擴充課程。</p>
+        </div>
+        <div class="signal-panel" aria-label="Listening signal">
+          <svg viewBox="0 0 260 130" role="img" aria-label="Listening waveform">
+            <rect x="6" y="8" width="248" height="114" rx="8" fill="var(--panel-2)" stroke="var(--line)"/>
+            <g class="wave" fill="var(--strong)">
+              <rect x="42" y="42" width="18" height="56" rx="5"/>
+              <rect x="74" y="28" width="18" height="84" rx="5"/>
+              <rect x="106" y="52" width="18" height="38" rx="5"/>
+              <rect x="138" y="20" width="18" height="94" rx="5"/>
+              <rect x="170" y="38" width="18" height="64" rx="5"/>
+            </g>
+            <text x="32" y="24" fill="var(--muted)" font-size="13" font-family="monospace">listen</text>
+            <text x="184" y="112" fill="var(--blue)" font-size="15" font-family="monospace">A / あ</text>
+          </svg>
+          <div class="voice" id="voice-status">偵測語音中...</div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 id="track-title">課程</h2>
+              <p id="track-goal">選一組課程開始。</p>
+            </div>
+            <span class="badge" id="track-badge">Listening first</span>
+          </div>
+          <div class="phrase-list" id="phrase-list"></div>
+        </div>
+
+        <div class="panel">
+          <div class="lab-title">
+            <div>
+              <h2>聽力實驗室</h2>
+              <p class="voice">先聽不看字，再聽寫，最後跟讀。</p>
+            </div>
+            <span class="badge" id="selected-index">1 / 9</span>
+          </div>
+
+          <div class="target hidden" id="target-card">
+            <div class="main-text" id="target-text">Select a phrase</div>
+            <div class="roman" id="target-roman"></div>
+            <div class="zh" id="target-zh"></div>
+          </div>
+
+          <div class="controls">
+            <button class="btn primary" id="play-btn">Play</button>
+            <button class="btn" id="slow-btn">Slow</button>
+            <button class="btn" id="loop-btn">Loop x3</button>
+          </div>
+          <div class="controls">
+            <button class="btn" id="reveal-btn">Reveal text</button>
+            <button class="btn" id="done-btn">Mark done</button>
+            <button class="btn" id="fav-btn">Save hard phrase</button>
+          </div>
+
+          <div class="dictation">
+            <label for="dictation-input"><strong>聽寫</strong> <span class="voice">美語輸入英文；日語可輸入日文或 romaji。</span></label>
+            <input type="text" id="dictation-input" autocomplete="off" placeholder="聽完後輸入你聽到的內容">
+            <button class="btn blue" id="check-btn">Check dictation</button>
+            <div class="result" id="dictation-result">等待作答。</div>
+          </div>
+
+          <div class="shadow">
+            <h3>跟讀自評</h3>
+            <p class="voice">播放後立刻跟讀。用 1-5 分記錄清楚度，重點是每次比上次更接近。</p>
+            <div class="rating" id="shadow-rating"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" style="margin-top:18px;">
+        <div class="panel-head">
+          <div>
+            <h2>學習紀錄</h2>
+            <p>完成、聽寫與跟讀分數會保存在這台瀏覽器。</p>
+          </div>
+          <span class="badge" id="session-label">Today</span>
+        </div>
+        <div class="progress-grid">
+          <div class="metric"><b id="metric-total">0</b><span>總短句</span></div>
+          <div class="metric"><b id="metric-done">0</b><span>已完成</span></div>
+          <div class="metric"><b id="metric-accuracy">0%</b><span>聽寫正確率</span></div>
+          <div class="metric"><b id="metric-shadow">0.0</b><span>平均跟讀分</span></div>
+        </div>
+        <h3>收藏的難句</h3>
+        <div class="chips" id="favorite-list"></div>
+        <div class="footer-tools">
+          <button class="btn primary" id="copy-md-btn">Copy study log as Markdown</button>
+          <button class="btn danger" id="reset-btn">Reset progress</button>
+        </div>
+        <textarea id="export-box" readonly placeholder="匯出的 Markdown 會出現在這裡。"></textarea>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    "use strict";
+
+    const STORAGE_KEY = "lang/state";
+
+    const LANG_COURSES = {
+      en: {
+        id: "en",
+        name: "美語",
+        speechLang: "en-US",
+        title: "American English Listening Path",
+        desc: "先用常用短句建立耳朵：抓重音、連音、弱化音，再進入聽寫與跟讀。",
+        tracks: [
+          {
+            id: "en-daily",
+            title: "Daily small talk",
+            goal: "聽懂自然速度的問候、確認與請求。",
+            phrases: [
+              { id: "en-1", text: "How's it going?", display: "How's it going?", zh: "最近怎麼樣？", focus: "How's it 會連成一串，不要逐字聽。", listenFor: "howzit", accepted: ["how's it going", "hows it going"] },
+              { id: "en-2", text: "Could you say that again?", display: "Could you say that again?", zh: "可以再說一次嗎？", focus: "could you 常聽起來像 couldja。", listenFor: "couldja", accepted: ["could you say that again", "couldja say that again"] },
+              { id: "en-3", text: "I'll get back to you later.", display: "I'll get back to you later.", zh: "我晚點回覆你。", focus: "get back to 連音，to 弱化。", listenFor: "get back tuh", accepted: ["i'll get back to you later", "ill get back to you later"] }
+            ]
+          },
+          {
+            id: "en-cafe",
+            title: "Cafe and travel",
+            goal: "點餐、問路、機場情境的實用聽力。",
+            phrases: [
+              { id: "en-4", text: "Can I get an iced coffee?", display: "Can I get an iced coffee?", zh: "我可以點一杯冰咖啡嗎？", focus: "Can I 常弱化成 k'n I；iced coffee 的 d 可能很輕。", listenFor: "k'n I get", accepted: ["can i get an iced coffee", "can i get iced coffee"] },
+              { id: "en-5", text: "I'm looking for gate B twelve.", display: "I'm looking for gate B12.", zh: "我在找 B12 登機門。", focus: "looking for 的 for 常弱化。", listenFor: "lookin fer", accepted: ["i'm looking for gate b twelve", "im looking for gate b12", "i am looking for gate b twelve"] },
+              { id: "en-6", text: "Is this seat taken?", display: "Is this seat taken?", zh: "這個位子有人坐嗎？", focus: "this seat 兩個 s 靠近，聽成一段。", listenFor: "this-seat", accepted: ["is this seat taken"] }
+            ]
+          },
+          {
+            id: "en-sound",
+            title: "American sound focus",
+            goal: "抓美式 flap T、r 音與句子重音。",
+            phrases: [
+              { id: "en-7", text: "Water sounds better with lemon.", display: "Water sounds better with lemon.", zh: "水加檸檬聽起來更好喝。", focus: "water / better 的 t 常變成 flap，像很快的 d。", listenFor: "wa-der, be-der", accepted: ["water sounds better with lemon"] },
+              { id: "en-8", text: "Really? I heard it was around the corner.", display: "Really? I heard it was around the corner.", zh: "真的嗎？我聽說就在轉角附近。", focus: "r 音要捲進去；around the 常連音。", listenFor: "around-the", accepted: ["really i heard it was around the corner"] },
+              { id: "en-9", text: "I don't think that's what she meant.", display: "I don't think that's what she meant.", zh: "我不覺得她是那個意思。", focus: "don't think 的 t 可能停住不爆破。", listenFor: "don't-think", accepted: ["i don't think that's what she meant", "i dont think thats what she meant"] }
+            ]
+          }
+        ]
+      },
+      ja: {
+        id: "ja",
+        name: "日語",
+        speechLang: "ja-JP",
+        title: "Japanese Listening Path",
+        desc: "從短句開始建立耳朵：先聽音節長短、促音、助詞，再做聽寫與跟讀。",
+        tracks: [
+          {
+            id: "ja-greeting",
+            title: "問候與自我介紹",
+            goal: "聽懂日常開場、自我介紹與基本寒暄。",
+            phrases: [
+              { id: "ja-1", text: "はじめまして。", display: "はじめまして。", roman: "hajimemashite", zh: "初次見面。", focus: "注意 shi-te 的節奏，不要拖太長。", listenFor: "ha-ji-me-ma-shi-te", accepted: ["はじめまして", "hajimemashite"] },
+              { id: "ja-2", text: "よろしくお願いします。", display: "よろしくお願いします。", roman: "yoroshiku onegaishimasu", zh: "請多指教。", focus: "ます 的 u 常很輕。", listenFor: "onegaishimas", accepted: ["よろしくお願いします", "yoroshiku onegaishimasu", "yoroshiku onegaishimas"] },
+              { id: "ja-3", text: "お名前は何ですか。", display: "お名前は何ですか。", roman: "onamae wa nan desu ka", zh: "請問你叫什麼名字？", focus: "は 在這裡讀 wa；です 的 u 很輕。", listenFor: "wa, des ka", accepted: ["お名前は何ですか", "onamae wa nan desu ka"] }
+            ]
+          },
+          {
+            id: "ja-request",
+            title: "請求與確認",
+            goal: "聽懂請對方重說、放慢與確認意思。",
+            phrases: [
+              { id: "ja-4", text: "すみません、もう一度お願いします。", display: "すみません、もう一度お願いします。", roman: "sumimasen, mou ichido onegaishimasu", zh: "不好意思，請再說一次。", focus: "もう 是長音；一度的 chi-do 要清楚。", listenFor: "mou ichi-do", accepted: ["すみませんもう一度お願いします", "sumimasen mou ichido onegaishimasu"] },
+              { id: "ja-5", text: "ゆっくり話してください。", display: "ゆっくり話してください。", roman: "yukkuri hanashite kudasai", zh: "請慢慢說。", focus: "ゆっくり 有促音，小停頓很重要。", listenFor: "yu-kku-ri", accepted: ["ゆっくり話してください", "yukkuri hanashite kudasai"] },
+              { id: "ja-6", text: "これはどういう意味ですか。", display: "これはどういう意味ですか。", roman: "kore wa dou iu imi desu ka", zh: "這是什麼意思？", focus: "どういう 常連得很快。", listenFor: "dou-iu", accepted: ["これはどういう意味ですか", "kore wa dou iu imi desu ka"] }
+            ]
+          },
+          {
+            id: "ja-town",
+            title: "店家與交通",
+            goal: "在店家、車站與街上能聽懂基本互動。",
+            phrases: [
+              { id: "ja-7", text: "これをください。", display: "これをください。", roman: "kore o kudasai", zh: "請給我這個。", focus: "を 在口語中多讀 o。", listenFor: "kore o", accepted: ["これをください", "kore o kudasai", "kore wo kudasai"] },
+              { id: "ja-8", text: "駅はどこですか。", display: "駅はどこですか。", roman: "eki wa doko desu ka", zh: "車站在哪裡？", focus: "は 讀 wa；どこですか 節奏短。", listenFor: "eki wa", accepted: ["駅はどこですか", "eki wa doko desu ka"] },
+              { id: "ja-9", text: "お会計お願いします。", display: "お会計お願いします。", roman: "okaikei onegaishimasu", zh: "麻煩結帳。", focus: "お会計 是長一點的詞，先抓 o-kai-kei。", listenFor: "o-kai-kei", accepted: ["お会計お願いします", "okaikei onegaishimasu", "okaikei onegaishimas"] }
+            ]
+          }
+        ]
+      }
+    };
+
+    const DEFAULT_STATE = {
+      lang: "en",
+      trackId: "en-daily",
+      phraseId: "en-1",
+      completed: {},
+      favorites: {},
+      dictation: [],
+      shadow: {},
+      notes: "",
+      rate: 1
+    };
+
+    let state = loadState();
+    let voices = [];
+    let revealText = false;
+
+    function loadState() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        return { ...DEFAULT_STATE, ...(raw || {}) };
+      } catch {
+        return { ...DEFAULT_STATE };
+      }
+    }
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+    function course() { return LANG_COURSES[state.lang]; }
+    function track() { return course().tracks.find(t => t.id === state.trackId) || course().tracks[0]; }
+    function phrases() { return track().phrases; }
+    function phrase() { return phrases().find(p => p.id === state.phraseId) || phrases()[0]; }
+    function allPhrases(lang = state.lang) { return LANG_COURSES[lang].tracks.flatMap(t => t.phrases.map(p => ({ ...p, trackTitle: t.title }))); }
+
+    function normalize(s) {
+      return String(s || "")
+        .toLowerCase()
+        .replace(/[’']/g, "")
+        .replace(/[。、「」、,.!?？\s-]/g, "")
+        .trim();
+    }
+
+    function isDictationCorrect(input, p) {
+      const target = [p.text, p.display, p.roman, ...(p.accepted || [])].filter(Boolean).map(normalize);
+      return target.includes(normalize(input));
+    }
+
+    function bestVoice(langCode) {
+      const exact = voices.find(v => v.lang === langCode);
+      if (exact) return exact;
+      const prefix = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(langCode.slice(0, 2).toLowerCase()));
+      return prefix || null;
+    }
+
+    function speak(text, rate = 1) {
+      return new Promise((resolve, reject) => {
+        if (!("speechSynthesis" in window)) {
+          reject(new Error("speechSynthesis unavailable"));
+          return;
+        }
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = course().speechLang;
+        u.rate = rate;
+        u.pitch = state.lang === "ja" ? 1.02 : 1;
+        const v = bestVoice(course().speechLang);
+        if (v) u.voice = v;
+        u.onstart = () => document.body.classList.add("speaking");
+        u.onend = () => { document.body.classList.remove("speaking"); resolve(); };
+        u.onerror = (e) => { document.body.classList.remove("speaking"); reject(e); };
+        window.speechSynthesis.speak(u);
+      });
+    }
+
+    async function loopSpeak(times, rate) {
+      for (let i = 0; i < times; i++) {
+        await speak(phrase().text, rate);
+        await new Promise(r => setTimeout(r, 350));
+      }
+    }
+
+    function setLanguage(lang) {
+      state.lang = lang;
+      state.trackId = LANG_COURSES[lang].tracks[0].id;
+      state.phraseId = LANG_COURSES[lang].tracks[0].phrases[0].id;
+      revealText = false;
+      saveState();
+      render();
+    }
+
+    function setTrack(trackId) {
+      state.trackId = trackId;
+      state.phraseId = track().phrases[0].id;
+      revealText = false;
+      saveState();
+      render();
+    }
+
+    function setPhrase(phraseId) {
+      state.phraseId = phraseId;
+      revealText = false;
+      saveState();
+      render();
+    }
+
+    function markDone(id = state.phraseId) {
+      state.completed[id] = Date.now();
+      saveState();
+      render();
+    }
+
+    function toggleFavorite(id = state.phraseId) {
+      if (state.favorites[id]) delete state.favorites[id];
+      else state.favorites[id] = Date.now();
+      saveState();
+      render();
+    }
+
+    function setShadowScore(score) {
+      state.shadow[state.phraseId] = { score, ts: Date.now() };
+      saveState();
+      renderProgress();
+      renderLab();
+    }
+
+    function dictationCheck() {
+      const input = document.getElementById("dictation-input").value;
+      const p = phrase();
+      const ok = isDictationCorrect(input, p);
+      state.dictation.push({ id: p.id, lang: state.lang, input, ok, ts: Date.now() });
+      if (ok) state.completed[p.id] = Date.now();
+      saveState();
+      const box = document.getElementById("dictation-result");
+      box.className = "result " + (ok ? "ok" : "bad");
+      box.textContent = ok ? "正確。接著做跟讀。" : "不完全正確。先慢速再聽一次，注意：" + p.listenFor;
+      renderProgress();
+      renderPhraseList();
+    }
+
+    function render() {
+      renderSidebar();
+      renderCourseHeader();
+      renderPhraseList();
+      renderLab();
+      renderProgress();
+      renderVoiceStatus();
+    }
+
+    function renderSidebar() {
+      document.querySelectorAll("#language-tabs button").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.lang === state.lang);
+      });
+      const list = document.getElementById("track-list");
+      list.innerHTML = course().tracks.map(t => `
+        <button class="track-btn ${t.id === state.trackId ? "active" : ""}" data-track="${t.id}">
+          <strong>${t.title}</strong>
+          <span>${t.goal}</span>
+        </button>
+      `).join("");
+      list.querySelectorAll("[data-track]").forEach(btn => btn.addEventListener("click", () => setTrack(btn.dataset.track)));
+    }
+
+    function renderCourseHeader() {
+      document.getElementById("course-title").textContent = course().title;
+      document.getElementById("course-desc").textContent = course().desc;
+      document.getElementById("track-title").textContent = track().title;
+      document.getElementById("track-goal").textContent = track().goal;
+      document.getElementById("track-badge").textContent = course().name + " Listening";
+    }
+
+    function renderPhraseList() {
+      const wrap = document.getElementById("phrase-list");
+      wrap.innerHTML = phrases().map((p, idx) => {
+        const done = !!state.completed[p.id];
+        const fav = !!state.favorites[p.id];
+        return `
+          <article class="phrase ${p.id === state.phraseId ? "active" : ""}">
+            <div class="phrase-top">
+              <div>
+                <div class="phrase-title">${p.display}</div>
+                ${p.roman ? `<div class="roman">${p.roman}</div>` : ""}
+                <div class="phrase-meta">${idx + 1}. ${p.zh}</div>
+              </div>
+              <span class="badge">${done ? "Done" : "Listen"}</span>
+            </div>
+            <div class="phrase-meta"><strong>聽力焦點：</strong>${p.focus}</div>
+            <div class="phrase-actions">
+              <button class="btn" data-select="${p.id}">Select</button>
+              <button class="btn" data-play="${p.id}">Play</button>
+              <button class="btn" data-done="${p.id}">${done ? "Done" : "Mark done"}</button>
+              <button class="btn" data-fav="${p.id}">${fav ? "Saved" : "Save hard phrase"}</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+      wrap.querySelectorAll("[data-select]").forEach(btn => btn.addEventListener("click", () => setPhrase(btn.dataset.select)));
+      wrap.querySelectorAll("[data-play]").forEach(btn => btn.addEventListener("click", () => {
+        setPhrase(btn.dataset.play);
+        speak(phrase().text, 1).catch(showSpeechWarning);
+      }));
+      wrap.querySelectorAll("[data-done]").forEach(btn => btn.addEventListener("click", () => markDone(btn.dataset.done)));
+      wrap.querySelectorAll("[data-fav]").forEach(btn => btn.addEventListener("click", () => toggleFavorite(btn.dataset.fav)));
+    }
+
+    function renderLab() {
+      const p = phrase();
+      const idx = phrases().findIndex(x => x.id === p.id) + 1;
+      document.getElementById("selected-index").textContent = idx + " / " + phrases().length;
+      const card = document.getElementById("target-card");
+      card.classList.toggle("hidden", !revealText);
+      document.getElementById("target-text").textContent = p.display;
+      document.getElementById("target-roman").textContent = p.roman || p.listenFor;
+      document.getElementById("target-zh").textContent = p.zh + " / 焦點：" + p.focus;
+      document.getElementById("dictation-input").value = "";
+      const res = document.getElementById("dictation-result");
+      res.className = "result";
+      res.textContent = "等待作答。";
+      document.getElementById("done-btn").textContent = state.completed[p.id] ? "Done" : "Mark done";
+      document.getElementById("fav-btn").textContent = state.favorites[p.id] ? "Saved hard phrase" : "Save hard phrase";
+      document.getElementById("reveal-btn").textContent = revealText ? "Hide text" : "Reveal text";
+      renderRating();
+    }
+
+    function renderRating() {
+      const wrap = document.getElementById("shadow-rating");
+      const cur = state.shadow[state.phraseId]?.score || 0;
+      wrap.innerHTML = [1, 2, 3, 4, 5].map(n => `<button class="btn ${n === cur ? "active" : ""}" data-score="${n}">${n}</button>`).join("");
+      wrap.querySelectorAll("[data-score]").forEach(btn => btn.addEventListener("click", () => setShadowScore(Number(btn.dataset.score))));
+    }
+
+    function renderProgress() {
+      const all = allPhrases();
+      const done = all.filter(p => state.completed[p.id]).length;
+      const dict = state.dictation.filter(x => x.lang === state.lang);
+      const correct = dict.filter(x => x.ok).length;
+      const acc = dict.length ? Math.round(correct / dict.length * 100) : 0;
+      const shadowScores = all.map(p => state.shadow[p.id]?.score).filter(Boolean);
+      const shadowAvg = shadowScores.length ? (shadowScores.reduce((a, b) => a + b, 0) / shadowScores.length) : 0;
+      document.getElementById("side-done").textContent = done;
+      document.getElementById("side-acc").textContent = acc + "%";
+      document.getElementById("metric-total").textContent = all.length;
+      document.getElementById("metric-done").textContent = done;
+      document.getElementById("metric-accuracy").textContent = acc + "%";
+      document.getElementById("metric-shadow").textContent = shadowAvg.toFixed(1);
+      document.getElementById("session-label").textContent = course().name;
+      const favs = allPhrases().filter(p => state.favorites[p.id]);
+      const favBox = document.getElementById("favorite-list");
+      favBox.innerHTML = favs.length ? favs.map(p => `<button class="chip" data-jump="${p.id}">${p.display}</button>`).join("") : `<span class="chip">尚未收藏難句</span>`;
+      favBox.querySelectorAll("[data-jump]").forEach(btn => btn.addEventListener("click", () => {
+        const foundTrack = course().tracks.find(t => t.phrases.some(p => p.id === btn.dataset.jump));
+        if (foundTrack) state.trackId = foundTrack.id;
+        state.phraseId = btn.dataset.jump;
+        saveState();
+        render();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }));
+    }
+
+    function renderVoiceStatus() {
+      const v = bestVoice(course().speechLang);
+      const text = v ? `語音：${v.name} (${v.lang})` : `尚未找到 ${course().speechLang} voice；瀏覽器可能仍可用預設語音。`;
+      document.getElementById("voice-status").textContent = text;
+    }
+
+    function showSpeechWarning(err) {
+      const el = document.getElementById("speech-warning");
+      el.hidden = false;
+      el.textContent = "語音播放失敗。請確認瀏覽器支援 speechSynthesis，或換 Chrome/Edge 測試。" + (err && err.message ? " " + err.message : "");
+      document.body.classList.remove("speaking");
+    }
+
+    function copyMarkdown() {
+      const all = allPhrases();
+      const done = all.filter(p => state.completed[p.id]);
+      const favs = all.filter(p => state.favorites[p.id]);
+      const dict = state.dictation.filter(x => x.lang === state.lang);
+      const correct = dict.filter(x => x.ok).length;
+      const lines = [];
+      lines.push("# LANG 學習紀錄");
+      lines.push("");
+      lines.push(`- 語言：${course().name}`);
+      lines.push(`- 完成：${done.length} / ${all.length}`);
+      lines.push(`- 聽寫：${correct} / ${dict.length || 0}`);
+      lines.push("");
+      lines.push("## 已完成短句");
+      done.forEach(p => lines.push(`- ${p.display} — ${p.zh}`));
+      lines.push("");
+      lines.push("## 收藏難句");
+      favs.forEach(p => lines.push(`- ${p.display} (${p.roman || p.listenFor}) — ${p.focus}`));
+      const md = lines.join("\n");
+      const box = document.getElementById("export-box");
+      box.value = md;
+      box.focus();
+      box.select();
+      if (navigator.clipboard) navigator.clipboard.writeText(md).catch(() => {});
+    }
+
+    function resetProgress() {
+      if (!confirm("清除 LANG 所有進度？")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state = { ...DEFAULT_STATE };
+      revealText = false;
+      render();
+    }
+
+    document.querySelectorAll("#language-tabs button").forEach(btn => btn.addEventListener("click", () => setLanguage(btn.dataset.lang)));
+    document.getElementById("play-btn").addEventListener("click", () => speak(phrase().text, 1).catch(showSpeechWarning));
+    document.getElementById("slow-btn").addEventListener("click", () => speak(phrase().text, .72).catch(showSpeechWarning));
+    document.getElementById("loop-btn").addEventListener("click", () => loopSpeak(3, .85).catch(showSpeechWarning));
+    document.getElementById("reveal-btn").addEventListener("click", () => { revealText = !revealText; renderLab(); });
+    document.getElementById("done-btn").addEventListener("click", () => markDone());
+    document.getElementById("fav-btn").addEventListener("click", () => toggleFavorite());
+    document.getElementById("check-btn").addEventListener("click", dictationCheck);
+    document.getElementById("dictation-input").addEventListener("keydown", e => { if (e.key === "Enter") dictationCheck(); });
+    document.getElementById("copy-md-btn").addEventListener("click", copyMarkdown);
+    document.getElementById("reset-btn").addEventListener("click", resetProgress);
+
+    if ("speechSynthesis" in window) {
+      voices = window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => {
+        voices = window.speechSynthesis.getVoices();
+        renderVoiceStatus();
+      };
+    } else {
+      showSpeechWarning();
+    }
+
+    render();
+  </script>
+</body>
+</html>
