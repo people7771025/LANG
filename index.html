@@ -160,6 +160,74 @@
     }
     .intro h2 { margin: 0; font-size: 28px; }
     .intro p { margin: 8px 0 0; color: var(--muted); max-width: 72ch; }
+    .exam-roadmap {
+      margin-bottom: 18px;
+    }
+    .goal-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .goal-box {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+    }
+    .goal-box b { display: block; font-size: 14px; }
+    .goal-box span { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .gate-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .gate {
+      border-left: 4px solid var(--strong);
+      padding: 8px 10px;
+      background: var(--strong-soft);
+      border-radius: 6px;
+      color: var(--ink);
+      font-size: 12px;
+    }
+    .gate b { display: block; font-size: 13px; margin-bottom: 3px; }
+    .phase-list {
+      display: grid;
+      gap: 12px;
+    }
+    .phase {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+    .phase h3 { margin: 0; font-size: 18px; }
+    .phase p { margin: 4px 0 10px; color: var(--muted); font-size: 13px; }
+    .chapter-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .exam-chapter {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 10px;
+      display: grid;
+      gap: 7px;
+    }
+    .exam-chapter.done {
+      border-color: var(--strong);
+      background: var(--strong-soft);
+    }
+    .exam-chapter strong { font-size: 14px; }
+    .exam-chapter span { color: var(--muted); font-size: 12px; }
+    .exam-chapter .chapter-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .source-note {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .source-note a { color: var(--blue); }
     .signal-panel {
       display: grid;
       align-content: center;
@@ -418,6 +486,7 @@
       .app { grid-template-columns: 1fr; }
       aside { position: relative; height: auto; }
       .top, .grid { grid-template-columns: 1fr; }
+      .goal-grid, .gate-strip { grid-template-columns: repeat(2, 1fr); }
       .controls, .progress-grid, .quiz-grid, .plan-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 560px) {
@@ -434,7 +503,7 @@
       }
       .intro h2 { font-size: 22px; }
       .target .main-text { font-size: 21px; }
-      .controls, .progress-grid, .rating, .quiz-grid, .plan-grid { grid-template-columns: 1fr; }
+      .controls, .progress-grid, .rating, .quiz-grid, .plan-grid, .goal-grid, .gate-strip, .chapter-list { grid-template-columns: 1fr; }
       .phrase-top, .lab-title, .panel-head { display: block; }
       .phrase-actions { margin-top: 8px; }
     }
@@ -463,7 +532,7 @@
         <div class="brand-mark">LA</div>
         <div>
           <h1>LANG</h1>
-          <p>美語與日語聽力自學</p>
+          <p>美語與日語考試自學</p>
         </div>
       </div>
 
@@ -473,7 +542,7 @@
         <button data-lang="ja">日語</button>
       </div>
 
-      <div class="side-label">Courses</div>
+      <div class="side-label">Listening Labs</div>
       <div class="track-list" id="track-list"></div>
 
       <div class="side-label">Progress</div>
@@ -488,7 +557,7 @@
       <section class="top">
         <div class="intro">
           <h2 id="course-title">LANG 美語與日語自學系統</h2>
-          <p id="course-desc">用短句反覆聽、聽寫、跟讀。第一版先建立每天可用的聽力訓練流程，再逐步擴充課程。</p>
+          <p id="course-desc">用考試通關路線安排完整章節，再用聽力實驗室反覆聽、聽寫、跟讀。</p>
         </div>
         <div class="signal-panel" aria-label="Listening signal">
           <svg viewBox="0 0 260 130" role="img" aria-label="Listening waveform">
@@ -505,6 +574,20 @@
           </svg>
           <div class="voice" id="voice-status">偵測語音中...</div>
         </div>
+      </section>
+
+      <section class="panel exam-roadmap" id="exam-roadmap-panel">
+        <div class="panel-head">
+          <div>
+            <h2 id="exam-title">考試通關路線</h2>
+            <p id="exam-desc">先建立完整考試路線，再用聽力實驗室做每日訓練。</p>
+          </div>
+          <span class="badge" id="exam-progress">0 / 0 章</span>
+        </div>
+        <div class="goal-grid" id="exam-goals"></div>
+        <div class="gate-strip" id="exam-gates"></div>
+        <div class="phase-list" id="exam-phases"></div>
+        <div class="source-note" id="exam-sources"></div>
       </section>
 
       <section class="grid">
@@ -600,7 +683,7 @@
         id: "en",
         name: "美語",
         speechLang: "en-US",
-        title: "American English Listening Path",
+        title: "English C1 Exam + Listening Path",
         desc: "完整章節版：從日常寒暄、修復聽不懂、點餐旅行，到職場會議、連音弱化、美式發音與短篇聽力。每章都要完成聽、慢聽、聽寫、跟讀與小測驗。",
         tracks: [
           {
@@ -745,7 +828,7 @@
         id: "ja",
         name: "日語",
         speechLang: "ja-JP",
-        title: "Japanese Listening Path",
+        title: "Japanese N2+ Exam + Listening Path",
         desc: "完整章節版：從問候、自我介紹、請求確認、店家交通，到時間安排、助詞辨識、長音/促音/拗音與日常短對話。每章都配合聽寫、跟讀與測驗。",
         tracks: [
           {
@@ -888,6 +971,266 @@
       }
     };
 
+    function examChapter(id, title, outcome, practice, gate) {
+      return { id, title, outcome, practice, gate };
+    }
+
+    const EXAM_PATHS = {
+      en: {
+        title: "英語 C1 考試通關路線",
+        desc: "目標不是只會聽短句，而是完成 C1 等級的聽、讀、寫、說與模考循環：GEPT 高級通過，TOEFL iBT 以官方 1-6 制為主並以過渡期 0-120 對照作參考，IELTS Academic 目標 7.0+ 且單科不低於 6.5。",
+        goals: [
+          { name: "GEPT 高級", target: "通過 C1", evidence: "能處理學術/專業情境，完成聽讀寫說兩階段任務。" },
+          { name: "TOEFL iBT", target: "5.0+ / 95+ 參考", evidence: "四科都要能做校園與學術任務；0-120 僅作 2026 後過渡參考。" },
+          { name: "IELTS Academic", target: "Overall 7.0+", evidence: "聽讀約 30/40 以上；寫說用官方四項標準拉到 6.5-7。" },
+          { name: "日常產出", target: "每週 3 篇/3 段錄音", evidence: "所有輸出都進錯誤本，隔週重寫或重錄。" }
+        ],
+        gates: [
+          { title: "Gate 1 診斷", text: "先測聽讀寫說，建立錯誤本與分數基線。" },
+          { title: "Gate 2 中階穩定", text: "聽讀正確率 75%+，口說 2 分鐘不卡住。" },
+          { title: "Gate 3 C1 輸出", text: "能摘要、比較、提出立場並支撐理由。" },
+          { title: "Gate 4 考前", text: "連續 3 回模考達標才進正式考。" }
+        ],
+        sources: [
+          { label: "GEPT Advanced official", url: "https://www.gept.org.tw/Eng/advanced.html" },
+          { label: "ETS TOEFL iBT content", url: "https://www.ets.org/toefl/test-takers/ibt/about/content.html" },
+          { label: "IELTS scoring official", url: "https://ielts.org/take-a-test/your-results/ielts-scoring-in-detail" }
+        ],
+        phases: [
+          {
+            title: "Phase 1｜診斷與 C1 基礎重建",
+            weeks: "Weeks 1-4",
+            goal: "確認目前程度，補齊高級考試最容易失分的文法、詞彙與輸出問題。",
+            chapters: [
+              examChapter("exam-en-01", "全科診斷與錯誤本", "完成聽讀寫說四科基線。", "做 1 回縮短版診斷：聽力 20 題、閱讀 2 篇、寫作 1 篇、口說 3 題。", "每個錯誤都要標成 vocabulary / grammar / logic / pronunciation / timing。"),
+              examChapter("exam-en-02", "C1 句型修復", "能穩定使用複句、讓步、因果與比較。", "每天改寫 10 句，把簡單句升級為 C1 表達。", "連續 5 天改寫錯誤率低於 15%。"),
+              examChapter("exam-en-03", "學術詞彙第一輪", "建立 800 個高頻學術與議題詞。", "每天 30 詞：定義、例句、同義詞、反義詞、口說句。", "隨機抽 80 詞，能用英文解釋 64 詞以上。"),
+              examChapter("exam-en-04", "段落聽力耐力", "能聽 3-5 分鐘講解並保留主線。", "每天聽 1 段 lecture/news，寫 5 行 outline。", "outline 包含 topic、2 個 support、1 個 conclusion。"),
+              examChapter("exam-en-05", "發音可懂度", "修正重音、連音、字尾音與語調。", "錄 90 秒自我介紹，標記吞音與重音錯誤。", "重錄後可清楚聽出句子重點與停頓。"),
+              examChapter("exam-en-06", "時間管理與學習節奏", "建立每週固定輸入/輸出量。", "每週 5 天：聽 30 分、讀 30 分、寫 20 分、說 15 分。", "連續 2 週完成率 80%+。")
+            ]
+          },
+          {
+            title: "Phase 2｜高級聽力與筆記",
+            weeks: "Weeks 5-10",
+            goal: "對準 GEPT 高級聽力、TOEFL academic talk、IELTS lecture/conversation。",
+            chapters: [
+              examChapter("exam-en-07", "短對話推論", "能聽出語氣、轉折與暗示。", "每天 20 題短對話，錯題寫出漏掉的 cue word。", "三天平均正確率 80%+。"),
+              examChapter("exam-en-08", "長對話結構", "能抓問題、解法、限制與下一步。", "聽 4-6 分鐘 conversation，畫 issue-action-result 表。", "能口頭重述 90 秒。"),
+              examChapter("exam-en-09", "學術講座筆記", "能用縮寫記主題、例子、因果。", "每週 5 篇 lecture，筆記限制 120 字。", "筆記能答對 75% 理解題。"),
+              examChapter("exam-en-10", "數字與細節", "不漏日期、比例、順序與條件。", "建立 number log，專練 statistics / schedule / process。", "細節題正確率 80%+。"),
+              examChapter("exam-en-11", "口音與速度", "適應美式、英式、澳式與不同語速。", "同主題聽 3 種口音，列出音變差異。", "第一次盲聽能抓 70% 主線。"),
+              examChapter("exam-en-12", "聽力模組小考", "整合短對話、長對話與講座。", "做 1 回 45-60 分鐘聽力小考。", "錯題回補後重測達 80%。")
+            ]
+          },
+          {
+            title: "Phase 3｜高級閱讀與資訊抓取",
+            weeks: "Weeks 11-16",
+            goal: "建立學術閱讀速度、段落邏輯、推論與 skimming/scanning。",
+            chapters: [
+              examChapter("exam-en-13", "主旨與段落功能", "能判斷每段在論證中的任務。", "每篇文章標 topic sentence、claim、evidence。", "主旨題正確率 85%+。"),
+              examChapter("exam-en-14", "推論題", "能從語氣與上下文推出未明說資訊。", "每題寫出依據句，不接受憑感覺。", "推論題正確率 75%+。"),
+              examChapter("exam-en-15", "詞彙依上下文", "能用語境猜生字，不中斷閱讀。", "每篇挑 10 個生字，先猜再查。", "猜義命中率 70%+。"),
+              examChapter("exam-en-16", "快讀與定位", "能快速找圖表、日期、人物、條件。", "限制時間掃描 3 篇文章找指定資訊。", "定位題平均每題 45 秒內。"),
+              examChapter("exam-en-17", "長文耐力", "能讀 900-1200 字文章不失主線。", "每週 3 篇長文，寫 120 字摘要。", "摘要涵蓋主張、證據、限制。"),
+              examChapter("exam-en-18", "閱讀模組小考", "整合 IELTS/TOEFL/GEPT 題型。", "做 1 回 60 分鐘閱讀小考。", "限時正確率 78%+。")
+            ]
+          },
+          {
+            title: "Phase 4｜寫作：摘要、論述、學術討論",
+            weeks: "Weeks 17-24",
+            goal: "能在時間內寫出清楚、連貫、少錯的 C1 文章。",
+            chapters: [
+              examChapter("exam-en-19", "段落架構", "每段只服務一個清楚功能。", "練 topic sentence、support、example、mini conclusion。", "任選題目 12 分鐘寫 1 段。"),
+              examChapter("exam-en-20", "IELTS Task 1 / 圖表摘要", "能描述趨勢、比較與例外。", "每週 4 張圖表，各寫 150-180 字。", "不列流水帳，必有 overview。"),
+              examChapter("exam-en-21", "IELTS Task 2 / 立場論述", "能清楚回答題目並支撐立場。", "每週 2 篇 250-320 字，隔日重寫。", "四項標準自評皆達 6.5+。"),
+              examChapter("exam-en-22", "TOEFL academic discussion", "能在短時間回應並延伸他人觀點。", "每天 1 題 100-120 字，練 agree / qualify / challenge。", "文章有立場、理由、例子且少語法錯。"),
+              examChapter("exam-en-23", "GEPT 高級摘要與意見", "能摘要語音/圖表資料並提出看法。", "聽一段或看圖表後寫摘要+建議。", "摘要不加入個人意見，意見段有解法。"),
+              examChapter("exam-en-24", "寫作模組小考", "限時完成 2 題並修訂。", "模擬 IELTS 或 GEPT 寫作時間。", "修訂版錯誤數比初稿少 50%。")
+            ]
+          },
+          {
+            title: "Phase 5｜口說：流暢、發音、即時組織",
+            weeks: "Weeks 25-30",
+            goal: "能在抽象議題、校園情境與簡報任務中穩定輸出。",
+            chapters: [
+              examChapter("exam-en-25", "30 秒組織法", "能快速產生立場、理由、例子。", "每天 10 題，用 PREP 結構錄音。", "每題 45-60 秒不中斷。"),
+              examChapter("exam-en-26", "IELTS Part 1-2", "能回答生活題並做 2 分鐘長答。", "準備 20 個主題卡，錄音後自評。", "長答含 opening、story、reflection。"),
+              examChapter("exam-en-27", "IELTS Part 3 抽象討論", "能比較、推測、評估社會議題。", "每題至少使用 one caveat + one example。", "回答能維持 90 秒以上。"),
+              examChapter("exam-en-28", "TOEFL interview / repeat", "能聽後重述並即時回答。", "每天 15 題 listen-repeat，再回答 follow-up。", "重述保留 80% 內容。"),
+              examChapter("exam-en-29", "GEPT discussion / presentation", "能參與討論並做短講。", "練 agree, disagree, ask follow-up, summarize。", "討論中至少主動接話 4 次。"),
+              examChapter("exam-en-30", "口說模組小考", "連續完成 12-15 分鐘口說測驗。", "錄完整模考，標 fluency / vocabulary / grammar / pronunciation。", "下一回同錯誤減少 30%。")
+            ]
+          },
+          {
+            title: "Phase 6｜整合任務與跨科能力",
+            weeks: "Weeks 31-36",
+            goal: "把聽讀輸入轉成寫說輸出，處理真實考試的 integrated tasks。",
+            chapters: [
+              examChapter("exam-en-31", "聽後摘要", "能聽一段內容後保留主張與證據。", "聽 4 分鐘，寫 120 字摘要。", "摘要不扭曲原意。"),
+              examChapter("exam-en-32", "讀後評論", "能對文章立場提出支持或反駁。", "讀 700 字文章，寫 180 字評論。", "至少引用 2 個文章資訊點。"),
+              examChapter("exam-en-33", "聽讀整合寫作", "能比較 reading 與 listening 的關係。", "練 contradiction / support / extension 三種模板。", "20 分鐘內完成 220 字。"),
+              examChapter("exam-en-34", "聽讀整合口說", "能用筆記口頭重建內容。", "聽讀後 60 秒準備、90 秒回答。", "回答含 source + relation + conclusion。"),
+              examChapter("exam-en-35", "議題資料庫", "累積教育、科技、環境、健康、經濟等素材。", "每週 2 個議題，各做詞彙、例子、立場。", "能在寫說中自然使用素材。"),
+              examChapter("exam-en-36", "整合模組小考", "做 1 回 mixed-skill test。", "聽讀寫說連續完成，不分天。", "能完成時間內全部任務。")
+            ]
+          },
+          {
+            title: "Phase 7｜考試別策略",
+            weeks: "Weeks 37-42",
+            goal: "針對 GEPT、TOEFL、IELTS 的格式差異做最後校準。",
+            chapters: [
+              examChapter("exam-en-37", "GEPT 高級第一階段", "熟悉聽讀題型與時間壓力。", "做聽讀整回，錯題分類。", "聽讀皆達通過門檻以上。"),
+              examChapter("exam-en-38", "GEPT 高級第二階段", "寫作摘要、圖表、口說討論與簡報。", "每週 1 回寫說整合模擬。", "能完成任務且內容有深度。"),
+              examChapter("exam-en-39", "TOEFL 閱聽策略", "適應新版題型與 adaptive timing。", "練 reading / listening 各 2 回。", "弱科不得低於目標 band。"),
+              examChapter("exam-en-40", "TOEFL 寫說策略", "適應 sentence/email/discussion 與 interview 任務。", "每天輪練 writing + speaking。", "答案符合題目格式，不離題。"),
+              examChapter("exam-en-41", "IELTS 聽讀策略", "建立 40 題制的檢查與跳題策略。", "每週各 1 回 IELTS listening/reading。", "聽讀穩定 30/40+。"),
+              examChapter("exam-en-42", "IELTS 寫說策略", "用官方評分四項校準輸出。", "Task 1/2 + speaking full interview。", "寫說自評皆達 6.5-7。")
+            ]
+          },
+          {
+            title: "Phase 8｜模考、補弱、正式考準備",
+            weeks: "Weeks 43-48",
+            goal: "用連續模考確認是否真的達標，而不是只覺得會了。",
+            chapters: [
+              examChapter("exam-en-43", "模考 1：建立最後差距", "找出正式考前最大三個弱點。", "完整做 1 回目標考試。", "產生 7 天補弱清單。"),
+              examChapter("exam-en-44", "補弱週 1", "處理最大失分型。", "只練錯誤率最高的題型與輸出錯誤。", "同類題提升 10%。"),
+              examChapter("exam-en-45", "模考 2：檢查修正成效", "確認補弱是否有效。", "完整做第 2 回模考。", "總分或等級達到目標 90%。"),
+              examChapter("exam-en-46", "補弱週 2", "處理第二大失分型。", "輸出題重寫/重錄，聽讀題重做。", "錯誤本未解決項少於 20 個。"),
+              examChapter("exam-en-47", "模考 3：正式考門檻", "連續達標才報考。", "完整做第 3 回模考。", "達 GEPT 高級/TOEFL/IELTS 目標線。"),
+              examChapter("exam-en-48", "考前維持與降風險", "把狀態維持到正式考。", "考前 7 天只做熟題、口說熱身、模板微調。", "睡眠與考試流程檢查完成。")
+            ]
+          }
+        ]
+      },
+      ja: {
+        title: "日語 N2+ 考試通關路線",
+        desc: "目標是至少通過 JLPT N2，並保留 N1 銜接能力。路線涵蓋語彙、漢字、文法、讀解、聽解、模考與錯題回收；8 個日語聽力章只是每日聽力實驗室，不是全部課程。",
+        goals: [
+          { name: "JLPT N2", target: "通過", evidence: "語言知識/讀解與聽解都要穩定達標，避免只靠單科補分。" },
+          { name: "N2 語彙漢字", target: "6000+ 詞 / 1000+ 漢字", evidence: "能依上下文判斷用法、讀音與相近詞差異。" },
+          { name: "N2 讀解", target: "長文與資訊檢索穩定", evidence: "能處理主張、理由、作者意圖與公告資訊。" },
+          { name: "N2 聽解", target: "任務理解與即時反應", evidence: "能抓課題、重點、概要、即時應答與統合理解。" }
+        ],
+        gates: [
+          { title: "Gate 1 N4/N3 檢查", text: "助詞、活用、敬體/常體、基礎漢字不得破洞。" },
+          { title: "Gate 2 N3 穩定", text: "N3 題型限時正確率 80%+ 再進 N2 主線。" },
+          { title: "Gate 3 N2 中段", text: "語彙文法與讀解各 70%+，聽解不低於 65%。" },
+          { title: "Gate 4 考前", text: "連續 3 回 N2 模考達通過線以上。" }
+        ],
+        sources: [
+          { label: "JLPT test sections official", url: "https://www.jlpt.jp/e/guideline/testsections.html" },
+          { label: "JLPT sample questions official", url: "https://www.jlpt.jp/e/samples/forlearners.html" }
+        ],
+        phases: [
+          {
+            title: "Phase 1｜N4/N3 基礎補洞",
+            weeks: "Weeks 1-6",
+            goal: "先把 N2 前的助詞、活用、基礎漢字與日常聽力補穩。",
+            chapters: [
+              examChapter("exam-ja-01", "程度診斷與錯題本", "確認 N4/N3 破洞。", "做語彙、文法、讀解、聽解各 20 題。", "錯題分類為 漢字/語彙/文法/讀解/聽解。"),
+              examChapter("exam-ja-02", "動詞活用總整理", "五段、一段、する、くる 活用不再卡住。", "每天 30 個動詞做 ます/ない/た/て/可能/受身/使役。", "隨機抽 50 個，正確 45 個以上。"),
+              examChapter("exam-ja-03", "助詞核心", "は、が、を、に、で、と、へ、から、まで 能依功能判斷。", "每天 30 題助詞填空並說明理由。", "連續 3 天正確率 85%+。"),
+              examChapter("exam-ja-04", "敬體與常體轉換", "能在閱讀與聽力中辨識語氣。", "20 句敬體轉常體、20 句常體轉敬體。", "轉換錯誤低於 10%。"),
+              examChapter("exam-ja-05", "N3 漢字復盤", "補足 N2 前必備漢字讀音。", "每天 25 字：音讀、訓讀、例詞。", "週測 100 字正確 80+。"),
+              examChapter("exam-ja-06", "N3 聽力復盤", "能聽懂日常任務與短對話。", "每天聽 10 題，寫課題與答案理由。", "N3 聽解正確率 80%+。")
+            ]
+          },
+          {
+            title: "Phase 2｜N2 語彙與漢字主線",
+            weeks: "Weeks 7-12",
+            goal: "建立 N2 的抽象詞、社會議題詞、相近詞與漢字辨識。",
+            chapters: [
+              examChapter("exam-ja-07", "N2 漢字讀音", "能辨識常見音訓讀與熟字訓。", "每天 30 字與 60 詞，隔天默寫讀音。", "週測 150 詞正確 120+。"),
+              examChapter("exam-ja-08", "相近語彙辨析", "區分 似ている、同じような、紛らわしい 詞。", "每天 20 組近義詞造句。", "能說出語氣、搭配、正式度差異。"),
+              examChapter("exam-ja-09", "副詞與接續詞", "能用 つまり、ところが、一方、なお 等理解文章。", "整理 80 個接續詞，標功能。", "閱讀時能預測下一句功能。"),
+              examChapter("exam-ja-10", "抽象名詞與社會議題", "掌握 環境、教育、労働、経済、医療 等議題詞。", "每週 2 主題詞表，讀 2 篇短文。", "能用日文摘要每篇 80 字。"),
+              examChapter("exam-ja-11", "語彙用法題", "能判斷詞的自然搭配。", "每天 30 題 usage，錯題造 2 句。", "三天平均正確率 75%+。"),
+              examChapter("exam-ja-12", "語彙漢字小考", "整合讀音、拼寫、用法、語境。", "做 1 回 N2 語彙漢字限時小考。", "正確率 75%+ 才進下一階段。")
+            ]
+          },
+          {
+            title: "Phase 3｜N2 文法與句型",
+            weeks: "Weeks 13-20",
+            goal: "把 N2 文法從背條目改成能看懂、聽懂、判斷語氣。",
+            chapters: [
+              examChapter("exam-ja-13", "逆接與讓步", "掌握 にもかかわらず、ものの、とはいえ 等。", "每個句型寫 2 句：正式/口語各一。", "能辨識相近句型差異。"),
+              examChapter("exam-ja-14", "原因理由與結果", "掌握 からには、以上、だけに、せいで 等。", "做 60 題句型選擇，錯題重寫。", "正確率 80%+。"),
+              examChapter("exam-ja-15", "程度與限制", "掌握 ほど、くらい、に限る、にすぎない 等。", "每組句型做比較表。", "能說出強弱與限制語氣。"),
+              examChapter("exam-ja-16", "義務、禁止、評價", "掌握 べき、わけにはいかない、に決まっている 等。", "讀短文找句型功能。", "句型功能判斷正確率 80%+。"),
+              examChapter("exam-ja-17", "文法組句與文章文法", "能處理句子重組與段落文法。", "每天 15 題組句，5 題段落文法。", "限時正確率 75%+。"),
+              examChapter("exam-ja-18", "文法小考", "整合 N2 文法與 N3 易混項。", "做 1 回 N2 文法限時小考。", "正確率 78%+。")
+            ]
+          },
+          {
+            title: "Phase 4｜N2 讀解",
+            weeks: "Weeks 21-28",
+            goal: "讀懂短文、中長文、統合理解、主張理解與資訊檢索。",
+            chapters: [
+              examChapter("exam-ja-19", "短文主旨", "能快速找作者主張。", "每天 5 篇短文，標 つまり / 筆者は。", "主旨題正確率 85%+。"),
+              examChapter("exam-ja-20", "中篇論理", "能追蹤理由、例子與轉折。", "每篇畫 claim-reason-example 圖。", "推論題正確率 75%+。"),
+              examChapter("exam-ja-21", "長文耐力", "能讀完長文不迷路。", "每週 3 篇長文，寫 100 字中文摘要。", "摘要涵蓋主張、理由、結論。"),
+              examChapter("exam-ja-22", "統合理解", "比較兩篇文章的共通點與差異。", "每週 4 組雙文本，列比較表。", "能找出相同主題下的立場差異。"),
+              examChapter("exam-ja-23", "情報検索", "公告、表格、說明書快速定位。", "限時找條件、日期、費用、例外。", "每題 60 秒內定位。"),
+              examChapter("exam-ja-24", "讀解小考", "整合 N2 所有讀解題型。", "做 1 回 N2 讀解限時小考。", "正確率 75%+。")
+            ]
+          },
+          {
+            title: "Phase 5｜N2 聽解",
+            weeks: "Weeks 29-34",
+            goal: "對準 N2 聽解的課題理解、重點理解、概要理解、即時應答、統合理解。",
+            chapters: [
+              examChapter("exam-ja-25", "課題理解", "能聽出人物接下來要做什麼。", "每題先寫 task，再選答案。", "課題理解正確率 80%+。"),
+              examChapter("exam-ja-26", "ポイント理解", "能抓條件、理由與限制。", "每題記 who / when / condition / reason。", "重點題正確率 75%+。"),
+              examChapter("exam-ja-27", "概要理解", "能聽出整段主旨。", "聽完用一句話說主題。", "概要題正確率 75%+。"),
+              examChapter("exam-ja-28", "即時應答", "能快速判斷自然回應。", "每天 30 題 quick response，朗讀正解。", "反應時間與正確率都穩定。"),
+              examChapter("exam-ja-29", "統合理解", "能整合多個人物與資訊。", "聽前預測、聽中畫簡表。", "能說明為什麼排除錯誤選項。"),
+              examChapter("exam-ja-30", "聽解小考", "完整做 N2 聽解限時測驗。", "一次完成，不暫停。", "正確率 70%+。")
+            ]
+          },
+          {
+            title: "Phase 6｜綜合運用與速度",
+            weeks: "Weeks 35-40",
+            goal: "把語彙、文法、讀解、聽解整合到真實考試速度。",
+            chapters: [
+              examChapter("exam-ja-31", "限時語彙文法", "縮短解題時間。", "語彙文法混合 60 題限時。", "每題平均 45 秒內。"),
+              examChapter("exam-ja-32", "讀解時間分配", "避免長文拖垮後段。", "短文、中篇、長文、情報検索各設定上限。", "整份讀解時間內完成。"),
+              examChapter("exam-ja-33", "聽解預測", "利用題目前資訊預測可能答案。", "聽前 5 秒寫預測，聽後比對。", "預測能幫助排除錯項。"),
+              examChapter("exam-ja-34", "錯題復盤法", "把錯題轉成下次可避免的規則。", "每題寫錯因、正解線索、下次策略。", "同類錯題下降 30%。"),
+              examChapter("exam-ja-35", "弱科補強週", "針對最低分科目加量。", "最低科每天多 30 分鐘。", "該科小考提升 10%。"),
+              examChapter("exam-ja-36", "綜合小考", "語彙文法讀解聽解連續完成。", "做半回綜合模擬。", "達通過線 90%。")
+            ]
+          },
+          {
+            title: "Phase 7｜N2 模考循環",
+            weeks: "Weeks 41-46",
+            goal: "用模考確認分數穩定，不靠運氣。",
+            chapters: [
+              examChapter("exam-ja-37", "模考 1：找落點", "確認離通過線還差多少。", "完整做 1 回 N2 模考。", "建立前 10 大錯誤清單。"),
+              examChapter("exam-ja-38", "補弱 1：語彙文法", "先處理最可控的分數。", "錯題重做 + 相近題加練。", "同類題正確率 80%+。"),
+              examChapter("exam-ja-39", "模考 2：檢查補弱", "確認補弱有效。", "完整做第 2 回模考。", "總分達通過線以上。"),
+              examChapter("exam-ja-40", "補弱 2：讀解聽解", "處理時間與資訊抓取問題。", "每天讀解 2 篇 + 聽解 20 題。", "弱科提升 10%。"),
+              examChapter("exam-ja-41", "模考 3：正式考門檻", "檢查是否穩定通過。", "完整做第 3 回模考。", "連續兩回通過線以上。"),
+              examChapter("exam-ja-42", "考前維持", "降低考前失誤。", "只做錯題本、熟題、聽力熱身。", "作息與考場流程確認。")
+            ]
+          },
+          {
+            title: "Phase 8｜N2 以上：N1 銜接",
+            weeks: "Weeks 47-52",
+            goal: "通過 N2 後不要停在考試技巧，開始銜接 N1 的抽象閱讀與高階語彙。",
+            chapters: [
+              examChapter("exam-ja-43", "N1 語彙預備", "開始累積抽象與書面詞。", "每週 150 詞，標正式度與搭配。", "能用中文/日文解釋 70%。"),
+              examChapter("exam-ja-44", "N1 文法預備", "接觸高階書面句型。", "每週 20 句型，讀例句不強背。", "能辨識語氣與功能。"),
+              examChapter("exam-ja-45", "評論文閱讀", "處理抽象論述與作者立場。", "每週 3 篇評論，寫主張摘要。", "能說明作者支持/反對什麼。"),
+              examChapter("exam-ja-46", "新聞與專題聽力", "聽懂較長新聞或解說。", "每週 5 段新聞，寫 5 行筆記。", "能重述主題與兩個細節。"),
+              examChapter("exam-ja-47", "日文輸出銜接", "雖然 JLPT 不考寫說，也建立實用能力。", "每週 2 篇 200 字日文摘要或意見。", "文法錯誤可被自己修正。"),
+              examChapter("exam-ja-48", "N1/N2 維持系統", "建立長期複習節奏。", "每週語彙、讀解、聽解各 2 次。", "一個月後模考分數不退步。")
+            ]
+          }
+        ]
+      }
+    };
+
     const DEFAULT_STATE = {
       lang: "en",
       trackId: "en-daily",
@@ -898,6 +1241,7 @@
       shadow: {},
       quizAnswers: {},
       quizReview: {},
+      examCompleted: {},
       notes: "",
       dailyMinutes: 20,
       rate: 1
@@ -925,6 +1269,7 @@
       next.shadow = next.shadow || {};
       next.quizAnswers = next.quizAnswers || {};
       next.quizReview = next.quizReview || {};
+      next.examCompleted = next.examCompleted || {};
       if (!LANG_COURSES[next.lang]) next.lang = "en";
       const langCourse = LANG_COURSES[next.lang];
       if (!langCourse.tracks.some(t => t.id === next.trackId)) next.trackId = langCourse.tracks[0].id;
@@ -940,6 +1285,8 @@
     function phrases() { return track().phrases; }
     function phrase() { return phrases().find(p => p.id === state.phraseId) || phrases()[0]; }
     function allPhrases(lang = state.lang) { return LANG_COURSES[lang].tracks.flatMap(t => t.phrases.map(p => ({ ...p, trackTitle: t.title }))); }
+    function examPath() { return EXAM_PATHS[state.lang]; }
+    function allExamChapters(lang = state.lang) { return EXAM_PATHS[lang].phases.flatMap(p => p.chapters.map(c => ({ ...c, phaseTitle: p.title }))); }
     function quizKey(trackId, index) { return state.lang + ":" + trackId + ":" + index; }
     function wrongQuizItems(lang = state.lang) {
       return Object.entries(state.quizReview || {})
@@ -1038,6 +1385,13 @@
       renderLab();
     }
 
+    function toggleExamChapter(id) {
+      if (state.examCompleted[id]) delete state.examCompleted[id];
+      else state.examCompleted[id] = Date.now();
+      saveState();
+      renderExamPath();
+    }
+
     function answerQuiz(index, choice) {
       const q = (track().quiz || [])[index];
       if (!q) return;
@@ -1081,6 +1435,7 @@
     function render() {
       renderSidebar();
       renderCourseHeader();
+      renderExamPath();
       renderPhraseList();
       renderQuizPanel();
       renderLab();
@@ -1101,6 +1456,50 @@
         </button>
       `).join("");
       list.querySelectorAll("[data-track]").forEach(btn => btn.addEventListener("click", () => setTrack(btn.dataset.track)));
+    }
+
+    function renderExamPath() {
+      const path = examPath();
+      const chapters = allExamChapters();
+      const done = chapters.filter(c => state.examCompleted[c.id]).length;
+      document.getElementById("exam-title").textContent = path.title;
+      document.getElementById("exam-desc").textContent = path.desc;
+      document.getElementById("exam-progress").textContent = done + " / " + chapters.length + " 章";
+      document.getElementById("exam-goals").innerHTML = path.goals.map(g => `
+        <div class="goal-box">
+          <b>${g.name}｜${g.target}</b>
+          <span>${g.evidence}</span>
+        </div>
+      `).join("");
+      document.getElementById("exam-gates").innerHTML = path.gates.map(g => `
+        <div class="gate"><b>${g.title}</b>${g.text}</div>
+      `).join("");
+      document.getElementById("exam-phases").innerHTML = path.phases.map(phase => `
+        <section class="phase">
+          <h3>${phase.title}</h3>
+          <p>${phase.weeks}｜${phase.goal}</p>
+          <div class="chapter-list">
+            ${phase.chapters.map(ch => {
+              const completed = !!state.examCompleted[ch.id];
+              return `
+                <article class="exam-chapter ${completed ? "done" : ""}">
+                  <strong>${ch.title}</strong>
+                  <span><b>成果：</b>${ch.outcome}</span>
+                  <span><b>練習：</b>${ch.practice}</span>
+                  <span><b>門檻：</b>${ch.gate}</span>
+                  <div class="chapter-actions">
+                    <button class="btn ${completed ? "primary" : ""}" data-exam-done="${ch.id}">${completed ? "Done" : "Mark chapter done"}</button>
+                  </div>
+                </article>
+              `;
+            }).join("")}
+          </div>
+        </section>
+      `).join("");
+      document.querySelectorAll("[data-exam-done]").forEach(btn => {
+        btn.addEventListener("click", () => toggleExamChapter(btn.dataset.examDone));
+      });
+      document.getElementById("exam-sources").innerHTML = "官方依據：" + path.sources.map(s => `<a href="${s.url}" target="_blank" rel="noreferrer">${s.label}</a>`).join(" / ");
     }
 
     function renderCourseHeader() {
@@ -1313,9 +1712,14 @@
       lines.push("# LANG 學習紀錄");
       lines.push("");
       lines.push(`- 語言：${course().name}`);
+      lines.push(`- 考試路線：${examPath().title}`);
+      lines.push(`- 考試章節：${allExamChapters().filter(c => state.examCompleted[c.id]).length} / ${allExamChapters().length}`);
       lines.push(`- 完成：${done.length} / ${all.length}`);
       lines.push(`- 聽寫：${correct} / ${dict.length || 0}`);
       lines.push(`- 章節錯題：${wrongs.length}`);
+      lines.push("");
+      lines.push("## 已完成考試章節");
+      allExamChapters().filter(c => state.examCompleted[c.id]).forEach(c => lines.push(`- ${c.phaseTitle}: ${c.title}`));
       lines.push("");
       lines.push("## 已完成短句");
       done.forEach(p => lines.push(`- ${p.display} — ${p.zh}`));
