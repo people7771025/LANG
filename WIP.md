@@ -4,7 +4,8 @@
 
 ## 現在狀態
 
-- 新專案 `$HOME/Dev/LANG` 已建立，本機 git repo：`main`，目前尚未設定 remote。
+- 專案 `$HOME/Dev/LANG` 已建立，本機 git repo：`main`，remote：`https://github.com/people7771025/LANG.git`。
+- GitHub Pages 已啟用：<https://people7771025.github.io/LANG/>
 - v2 考試通關版：單檔 `index.html`，離線可開，localStorage 保存進度。
 - 內容包含：
   - 英文考試路線：48 章，對準 GEPT 高級 C1、TOEFL iBT、IELTS Academic 7.0+。
@@ -29,10 +30,10 @@
 
 ## 下一步
 
-1. 若要部署：建立 GitHub remote 後推送並啟用 GitHub Pages。
-2. 若要強化聽力：加入真人錄音或可下載音檔；目前先用瀏覽器 TTS。
-3. 若要做進階版：可加入 spaced repetition、錄音回放、正式模考題庫與作文/口說評分 rubric。
+1. 若要強化聽力：加入真人錄音或可下載音檔；目前先用瀏覽器 TTS。
+2. 若要做進階版：可加入 spaced repetition、錄音回放、正式模考題庫與作文/口說評分 rubric。
+3. 若要整合入口：透過 LEARN <https://people7771025.github.io/LEARN/> 導覽。
 
 ## 卡點
 
-- 無 remote，暫時只能本機 commit，不能 push。
+- 無卡點。
