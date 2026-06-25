@@ -37,6 +37,15 @@
     }
     button, input, textarea, select { font: inherit; }
     button { cursor: pointer; }
+    button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 2px;
+    }
+    input:focus-visible, textarea:focus-visible { outline-offset: 1px; }
+    /* 深色側欄(#111827)內的控件改用亮綠 ring，確保在深底上看得見 */
+    .track-btn:focus-visible, .seg button:focus-visible, #language-tabs button:focus-visible {
+      outline-color: #5eead4;
+    }
     .app {
       display: grid;
       grid-template-columns: 300px minmax(0, 1fr);
@@ -345,6 +354,8 @@
     .btn.blue { background: var(--blue); border-color: var(--blue); color: #fff; }
     .btn.danger { color: var(--red); border-color: var(--red); }
     .btn:disabled { opacity: .55; cursor: not-allowed; }
+    /* 播放中：播放鈕呈按下態，給「正在播放」回饋並降低連點誤觸 */
+    body.speaking #play-btn { box-shadow: inset 0 0 0 2px var(--blue-soft); filter: brightness(.92); }
     .lab-title {
       display: flex;
       justify-content: space-between;
@@ -438,6 +449,16 @@
       font-size: 12px;
       color: var(--muted);
     }
+    /* 可點 chip：拉高點擊區並給可按線索，與被動標籤 chip 區隔 */
+    .chip-action {
+      min-height: 36px;
+      padding: 8px 12px;
+      color: var(--ink);
+    }
+    .chip-action:hover { border-color: var(--blue); color: var(--ink); }
+    @media (max-width: 560px) {
+      .chip-action { min-height: 40px; }
+    }
     .daily-plan {
       margin: 12px 0 16px;
       padding: 12px;
@@ -522,6 +543,10 @@
         --warn-soft: #3a2713;
       }
       textarea, input[type="text"], .chip { background: #0f172a; color: var(--ink); }
+      /* 深色模式語音警告：亮黃字 + 較深暖邊框，確保錯誤訊息可讀(對比 ≥4.5:1) */
+      .notice { color: #fcd34d; border-color: #7c5a1e; }
+      /* 深色側欄與主畫面幾乎同色，補一條右邊界讓雙欄結構不塌 */
+      aside { border-right: 1px solid var(--line); }
     }
   </style>
 </head>
@@ -612,8 +637,8 @@
             <span class="badge" id="selected-index">1 / 9</span>
           </div>
 
-          <div class="target hidden" id="target-card">
-            <div class="main-text" id="target-text">Select a phrase</div>
+          <div class="target" id="target-card">
+            <div class="main-text" id="target-text">點任一短句的「播放」開始盲聽</div>
             <div class="roman" id="target-roman"></div>
             <div class="zh" id="target-zh"></div>
           </div>
@@ -1250,6 +1275,8 @@
     let state = loadState();
     let voices = [];
     let revealText = false;
+    // 使用者是否已主動進入盲聽(選句/播放/跟讀)；未進入前聽力卡顯示引導文案而非模糊空狀態
+    let hasEngaged = false;
 
     function loadState() {
       try {
@@ -1361,6 +1388,7 @@
     function setPhrase(phraseId) {
       state.phraseId = phraseId;
       revealText = false;
+      hasEngaged = true;
       saveState();
       render();
     }
@@ -1589,10 +1617,19 @@
       const idx = phrases().findIndex(x => x.id === p.id) + 1;
       document.getElementById("selected-index").textContent = idx + " / " + phrases().length;
       const card = document.getElementById("target-card");
-      card.classList.toggle("hidden", !revealText);
-      document.getElementById("target-text").textContent = p.display;
-      document.getElementById("target-roman").textContent = p.roman || p.listenFor;
-      document.getElementById("target-zh").textContent = p.zh + " / 焦點：" + p.focus;
+      if (!hasEngaged) {
+        // 引導態：尚未開始盲聽，顯示清楚的繁中提示而非模糊空狀態
+        card.classList.remove("hidden");
+        document.getElementById("target-text").textContent = "點任一短句的「播放」開始盲聽";
+        document.getElementById("target-roman").textContent = "";
+        document.getElementById("target-zh").textContent = "先不看字聽 2 回，聽完再按「顯示原文」對答案。";
+      } else {
+        // 盲聽態：未顯示原文時模糊遮字
+        card.classList.toggle("hidden", !revealText);
+        document.getElementById("target-text").textContent = p.display;
+        document.getElementById("target-roman").textContent = p.roman || p.listenFor;
+        document.getElementById("target-zh").textContent = p.zh + " / 焦點：" + p.focus;
+      }
       document.getElementById("dictation-input").value = "";
       const res = document.getElementById("dictation-result");
       res.className = "result";
@@ -1630,15 +1667,8 @@
       renderWrongList();
       const favs = allPhrases().filter(p => state.favorites[p.id]);
       const favBox = document.getElementById("favorite-list");
-      favBox.innerHTML = favs.length ? favs.map(p => `<button class="chip" data-jump="${p.id}">${p.display}</button>`).join("") : `<span class="chip">尚未收藏難句</span>`;
-      favBox.querySelectorAll("[data-jump]").forEach(btn => btn.addEventListener("click", () => {
-        const foundTrack = course().tracks.find(t => t.phrases.some(p => p.id === btn.dataset.jump));
-        if (foundTrack) state.trackId = foundTrack.id;
-        state.phraseId = btn.dataset.jump;
-        saveState();
-        render();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }));
+      favBox.innerHTML = favs.length ? favs.map(p => `<button class="chip chip-action" data-jump="${p.id}">${p.display}</button>`).join("") : `<span class="chip">尚未收藏難句</span>`;
+      favBox.querySelectorAll("[data-jump]").forEach(btn => btn.addEventListener("click", () => safeJump(btn.dataset.jump)));
     }
 
     function renderDailyPlan() {
@@ -1660,7 +1690,7 @@
         <div class="plan-grid">
           ${plan.map(step => `<div class="plan-step"><b>${step.title}</b><span>${step.text}</span></div>`).join("")}
         </div>
-        <div class="voice" style="margin-top:10px;">建議短句：${fallback.map(p => `<button class="chip" data-plan-jump="${p.id}">${p.display}</button>`).join(" ")}</div>
+        <div class="voice" style="margin-top:10px;">建議短句：${fallback.map(p => `<button class="chip chip-action" data-plan-jump="${p.id}">${p.display}</button>`).join(" ")}</div>
       `;
       box.querySelectorAll("[data-plan-jump]").forEach(btn => btn.addEventListener("click", () => jumpToPhrase(btn.dataset.planJump)));
     }
@@ -1668,7 +1698,7 @@
     function renderWrongList() {
       const wrongs = wrongQuizItems();
       const box = document.getElementById("wrong-list");
-      box.innerHTML = wrongs.length ? wrongs.map(item => `<button class="chip" data-wrong-track="${item.trackId}">${item.trackTitle}: ${item.question}</button>`).join("") : `<span class="chip">目前沒有章節錯題</span>`;
+      box.innerHTML = wrongs.length ? wrongs.map(item => `<button class="chip chip-action" data-wrong-track="${item.trackId}">${item.trackTitle}: ${item.question}</button>`).join("") : `<span class="chip">目前沒有章節錯題</span>`;
       box.querySelectorAll("[data-wrong-track]").forEach(btn => btn.addEventListener("click", () => {
         const t = course().tracks.find(t => t.id === btn.dataset.wrongTrack);
         if (!t) return;
@@ -1680,13 +1710,19 @@
       }));
     }
 
-    function jumpToPhrase(id) {
+    function safeJump(id) {
       const foundTrack = course().tracks.find(t => t.phrases.some(p => p.id === id));
-      if (foundTrack) state.trackId = foundTrack.id;
+      if (!foundTrack) return;
+      state.trackId = foundTrack.id;
       state.phraseId = id;
+      hasEngaged = true;
       saveState();
       render();
       window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function jumpToPhrase(id) {
+      safeJump(id);
     }
 
     function renderVoiceStatus() {
@@ -1743,14 +1779,22 @@
       localStorage.removeItem(STORAGE_KEY);
       state = defaultState();
       revealText = false;
+      hasEngaged = false;
       render();
     }
 
+    function engageLab() {
+      if (!hasEngaged) {
+        hasEngaged = true;
+        renderLab();
+      }
+    }
+
     document.querySelectorAll("#language-tabs button").forEach(btn => btn.addEventListener("click", () => setLanguage(btn.dataset.lang)));
-    document.getElementById("play-btn").addEventListener("click", () => speak(phrase().text, 1).catch(showSpeechWarning));
-    document.getElementById("slow-btn").addEventListener("click", () => speak(phrase().text, .72).catch(showSpeechWarning));
-    document.getElementById("loop-btn").addEventListener("click", () => loopSpeak(3, .85).catch(showSpeechWarning));
-    document.getElementById("reveal-btn").addEventListener("click", () => { revealText = !revealText; renderLab(); });
+    document.getElementById("play-btn").addEventListener("click", () => { engageLab(); speak(phrase().text, 1).catch(showSpeechWarning); });
+    document.getElementById("slow-btn").addEventListener("click", () => { engageLab(); speak(phrase().text, .72).catch(showSpeechWarning); });
+    document.getElementById("loop-btn").addEventListener("click", () => { engageLab(); loopSpeak(3, .85).catch(showSpeechWarning); });
+    document.getElementById("reveal-btn").addEventListener("click", () => { hasEngaged = true; revealText = !revealText; renderLab(); });
     document.getElementById("done-btn").addEventListener("click", () => markDone());
     document.getElementById("fav-btn").addEventListener("click", () => toggleFavorite());
     document.getElementById("check-btn").addEventListener("click", dictationCheck);
@@ -1758,13 +1802,30 @@
     document.getElementById("copy-md-btn").addEventListener("click", copyMarkdown);
     document.getElementById("reset-btn").addEventListener("click", resetProgress);
 
+    function updateVoiceButtons() {
+      const supported = ("speechSynthesis" in window);
+      // 不支援時永久 disabled；支援但 voices 尚未載入時暫時 disabled(由 voiceschanged 或 fallback timer 解除)
+      const disabled = !supported || voices.length === 0;
+      ["play-btn", "slow-btn", "loop-btn"].forEach(id => {
+        document.getElementById(id).disabled = disabled;
+      });
+    }
+
     if ("speechSynthesis" in window) {
       voices = window.speechSynthesis.getVoices();
+      updateVoiceButtons();
       window.speechSynthesis.onvoiceschanged = () => {
         voices = window.speechSynthesis.getVoices();
+        updateVoiceButtons();
         renderVoiceStatus();
       };
+      // 保險：部分瀏覽器 onvoiceschanged 不一定觸發，避免三顆鈕永久卡 disabled
+      setTimeout(() => {
+        voices = window.speechSynthesis.getVoices();
+        ["play-btn", "slow-btn", "loop-btn"].forEach(id => { document.getElementById(id).disabled = false; });
+      }, 1500);
     } else {
+      updateVoiceButtons();
       showSpeechWarning();
     }
 
