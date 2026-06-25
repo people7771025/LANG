@@ -1670,8 +1670,9 @@
       const box = document.getElementById("wrong-list");
       box.innerHTML = wrongs.length ? wrongs.map(item => `<button class="chip" data-wrong-track="${item.trackId}">${item.trackTitle}: ${item.question}</button>`).join("") : `<span class="chip">目前沒有章節錯題</span>`;
       box.querySelectorAll("[data-wrong-track]").forEach(btn => btn.addEventListener("click", () => {
-        state.trackId = btn.dataset.wrongTrack;
-        const t = track();
+        const t = course().tracks.find(t => t.id === btn.dataset.wrongTrack);
+        if (!t) return;
+        state.trackId = t.id;
         state.phraseId = t.phrases[0].id;
         saveState();
         render();
