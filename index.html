@@ -3,28 +3,75 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="LANG — 美語與日語考試自學系統。考試通關路線搭配聽力實驗室：盲聽、慢聽、聽寫、跟讀，進度保存在本機瀏覽器。">
   <title>LANG 美語與日語自學系統</title>
-  <link rel="icon" href="data:,">
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23101723"/><g fill="none" stroke="%234fb3a3" stroke-width="5" stroke-linecap="round"><path d="M18 38V26"/><path d="M28 44V20"/><path d="M38 41V23"/><path d="M48 36V28"/></g></svg>'>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f7f7f4;
-      --panel: #ffffff;
-      --panel-2: #f0f3f5;
-      --ink: #17202a;
-      --muted: #667085;
-      --subtle: #98a2b3;
-      --line: #d8dee4;
-      --strong: #0f766e;
-      --strong-soft: #dff3ef;
-      --blue: #2563eb;
-      --blue-soft: #e8efff;
-      --red: #be123c;
-      --red-soft: #fde7ee;
-      --warn: #b45309;
-      --warn-soft: #fff1d6;
-      --radius: 8px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      /* ---- 中性面板：暖中灰一族（同一色相，不混冷暖灰） ---- */
+      --bg: #f4f3ef;
+      --bg-tint: #eceae3;
+      --panel: #fbfaf7;
+      --panel-2: #f1efe9;
+      --ink: #1c2530;
+      --ink-2: #3b4654;
+      --muted: #6b7686;
+      --subtle: #9aa3b2;
+      --line: #e0ddd4;
+      --line-strong: #cdc9bd;
+
+      /* ---- 單一克制主色：去飽和青；blue 僅作資訊/羅馬拼音輔色 ---- */
+      --accent: #2f7d70;
+      --accent-strong: #25685d;
+      --accent-soft: #e3efeb;
+      --accent-line: #b7d6cf;
+      --strong: var(--accent);
+      --strong-soft: var(--accent-soft);
+      --blue: #3a6ea5;
+      --blue-soft: #e6eef6;
+      --red: #b23a4e;
+      --red-soft: #f6e6e8;
+      --warn: #9a6a1c;
+      --warn-soft: #f6ecd6;
+
+      /* ---- 圓角階梯：外層柔、內層緊 ---- */
+      --r-sm: 6px;
+      --r-md: 10px;
+      --r-lg: 14px;
+      --r-pill: 999px;
+      --radius: var(--r-md);
+
+      /* ---- 8pt 間距節奏 ---- */
+      --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+      --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
+
+      /* ---- 6 級 type scale（major-third 風味，實際以 CSS 變數驅動） ---- */
+      --fs-display: clamp(28px, 1.4rem + 1.6vw, 40px);
+      --fs-h1: clamp(22px, 1.2rem + 0.9vw, 28px);
+      --fs-h2: 19px;
+      --fs-h3: 16px;
+      --fs-body: 15px;
+      --fs-small: 13px;
+      --fs-micro: 11px;
+      --lh-tight: 1.12;
+      --lh-snug: 1.3;
+      --lh-body: 1.6;
+
+      /* ---- 暖調陰影：帶背景色相、單一光源由上 ---- */
+      --shadow-sm: 0 1px 2px rgba(40, 38, 30, .05), 0 1px 1px rgba(40, 38, 30, .04);
+      --shadow-md: 0 6px 16px -8px rgba(40, 38, 30, .18), 0 2px 6px -4px rgba(40, 38, 30, .12);
+      --ring: 0 0 0 3px var(--accent-soft);
+
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: "Noto Sans TC", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      --display: "Space Grotesk", "Noto Sans TC", ui-sans-serif, system-ui, sans-serif;
+
+      --sidebar: #121823;
+      --sidebar-2: #0c111a;
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -33,476 +80,705 @@
       font-family: var(--sans);
       color: var(--ink);
       background: var(--bg);
-      line-height: 1.55;
+      line-height: var(--lh-body);
+      font-size: var(--fs-body);
+      font-feature-settings: "ss01";
+      /* 暖調極淡顆粒，打破純平塗的數位感 */
+      background-image:
+        radial-gradient(at 12% 0%, var(--bg-tint) 0px, transparent 55%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      background-attachment: fixed;
     }
+    /* 數據與序號用等寬數字，欄位不跳動 */
+    .side-stat b, .metric b, .badge, .roman, .brand-mark,
+    #selected-index, #exam-progress, #track-badge { font-variant-numeric: tabular-nums; }
     button, input, textarea, select { font: inherit; }
     button { cursor: pointer; }
+    h1, h2, h3 { text-wrap: balance; }
+    p { text-wrap: pretty; }
     button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
-      outline: 2px solid var(--blue);
+      outline: 2px solid var(--accent);
       outline-offset: 2px;
+      border-radius: var(--r-sm);
     }
-    input:focus-visible, textarea:focus-visible { outline-offset: 1px; }
-    /* 深色側欄(#111827)內的控件改用亮綠 ring，確保在深底上看得見 */
+    input:focus-visible, textarea:focus-visible { outline-offset: 1px; box-shadow: var(--ring); }
+    /* 深色側欄內的控件改用亮青 ring，確保在深底上看得見 */
     .track-btn:focus-visible, .seg button:focus-visible, #language-tabs button:focus-visible {
-      outline-color: #5eead4;
+      outline-color: #66d3c2;
     }
+    ::selection { background: var(--accent-soft); color: var(--accent-strong); }
     .app {
       display: grid;
-      grid-template-columns: 300px minmax(0, 1fr);
-      min-height: 100vh;
+      grid-template-columns: 304px minmax(0, 1fr);
+      min-height: 100dvh;
     }
     aside {
       position: sticky;
       top: 0;
-      height: 100vh;
+      height: 100dvh;
       overflow: auto;
-      padding: 18px;
-      background: #111827;
-      color: #f8fafc;
+      padding: var(--s5) var(--s4) var(--s6);
+      background:
+        linear-gradient(180deg, var(--sidebar) 0%, var(--sidebar-2) 100%);
+      color: #eef1f5;
+      border-right: 1px solid rgba(255,255,255,.06);
     }
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 18px;
+      gap: var(--s3);
+      margin-bottom: var(--s6);
     }
     .brand-mark {
-      width: 44px;
-      height: 44px;
-      border-radius: 8px;
-      background: #f8fafc;
-      color: #111827;
+      width: 42px;
+      height: 42px;
+      flex: none;
+      border-radius: var(--r-md);
+      background: linear-gradient(150deg, #2f7d70, #1f5b51);
+      color: #eafaf6;
       display: grid;
       place-items: center;
-      font-weight: 900;
-      font-family: var(--mono);
-    }
-    .brand h1 { margin: 0; font-size: 22px; line-height: 1; }
-    .brand p { margin: 4px 0 0; color: #cbd5e1; font-size: 12px; }
-    .side-label {
-      margin: 18px 0 8px;
-      color: #9ca3af;
-      font-size: 11px;
       font-weight: 700;
+      font-family: var(--display);
+      font-size: 17px;
+      letter-spacing: .02em;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+    }
+    .brand h1 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 23px;
+      line-height: 1;
+      letter-spacing: .14em;
+      font-weight: 600;
+    }
+    .brand p { margin: 6px 0 0; color: #97a2b3; font-size: var(--fs-micro); letter-spacing: .04em; }
+    .side-label {
+      margin: var(--s5) 0 var(--s2);
+      color: #7c8799;
+      font-size: var(--fs-micro);
+      font-weight: 600;
+      letter-spacing: .14em;
       text-transform: uppercase;
     }
     .seg {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 6px;
+      gap: var(--s1);
       padding: 4px;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: var(--radius);
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--r-md);
     }
     .seg button {
       border: 0;
-      border-radius: 6px;
-      padding: 8px 10px;
+      border-radius: var(--r-sm);
+      padding: 9px 10px;
       background: transparent;
-      color: #d1d5db;
-      font-weight: 700;
+      color: #c2cad6;
+      font-weight: 600;
+      letter-spacing: .02em;
+      transition: background .18s ease, color .18s ease;
     }
-    .seg button.active { background: #f8fafc; color: #111827; }
-    .track-list { display: grid; gap: 8px; }
+    .seg button:hover { color: #fff; background: rgba(255,255,255,.06); }
+    .seg button.active {
+      background: #f3f5f8;
+      color: #16202c;
+      box-shadow: 0 1px 2px rgba(0,0,0,.25);
+    }
+    .track-list { display: grid; gap: var(--s2); }
     .track-btn {
       width: 100%;
       text-align: left;
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: var(--radius);
-      background: rgba(255,255,255,.05);
-      color: #e5e7eb;
-      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--r-md);
+      background: rgba(255,255,255,.035);
+      color: #d7dce4;
+      padding: 11px 13px;
+      position: relative;
+      transition: border-color .18s ease, background .18s ease, transform .12s ease;
     }
+    .track-btn:hover { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.16); }
+    .track-btn:active { transform: translateY(1px); }
     .track-btn.active {
-      border-color: #5eead4;
-      background: rgba(45,212,191,.12);
+      border-color: transparent;
+      background: rgba(64,168,150,.16);
       color: #fff;
+      box-shadow: inset 0 0 0 1px rgba(102,211,194,.45);
     }
-    .track-btn strong { display: block; font-size: 14px; }
-    .track-btn span { display: block; color: #cbd5e1; font-size: 12px; margin-top: 3px; }
+    /* 選取態左緣指示條，取代「整塊變色」的通用作法 */
+    .track-btn.active::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 10px; bottom: 10px;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: #66d3c2;
+    }
+    .track-btn strong { display: block; font-size: var(--fs-small); font-weight: 600; letter-spacing: .01em; }
+    .track-btn span { display: block; color: #aab3c0; font-size: 12px; margin-top: 4px; line-height: 1.45; }
     .track-meta {
       display: flex;
-      gap: 6px;
+      gap: var(--s2);
       flex-wrap: wrap;
-      margin-top: 8px;
+      margin-top: var(--s2);
     }
     .track-meta em {
       font-style: normal;
-      color: #99f6e4;
-      font-size: 11px;
-      font-weight: 800;
+      color: #8fe6d6;
+      font-size: var(--fs-micro);
+      font-weight: 600;
+      letter-spacing: .03em;
+      font-variant-numeric: tabular-nums;
     }
     .side-stat {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 14px;
+      gap: var(--s2);
+      margin-top: var(--s3);
     }
     .side-stat div {
-      padding: 10px;
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: var(--radius);
-      background: rgba(255,255,255,.05);
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--r-md);
+      background: rgba(255,255,255,.035);
     }
-    .side-stat b { display: block; color: #fff; font-size: 20px; font-family: var(--mono); }
-    .side-stat span { color: #cbd5e1; font-size: 11px; }
+    .side-stat b { display: block; color: #fff; font-size: 22px; font-family: var(--display); font-weight: 600; letter-spacing: -.01em; }
+    .side-stat span { color: #97a2b3; font-size: var(--fs-micro); letter-spacing: .02em; }
     main {
       min-width: 0;
-      padding: 24px;
-      max-width: 1280px;
+      padding: var(--s6) var(--s5) var(--s7);
+      max-width: 1240px;
       width: 100%;
       margin: 0 auto;
     }
     .top {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 260px;
-      gap: 18px;
+      grid-template-columns: minmax(0, 1fr) 268px;
+      gap: var(--s4);
       align-items: stretch;
-      margin-bottom: 20px;
+      margin-bottom: var(--s5);
     }
     .intro, .signal-panel, .panel {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 18px;
+      border-radius: var(--r-lg);
+      padding: var(--s5);
+      box-shadow: var(--shadow-sm);
     }
-    .intro h2 { margin: 0; font-size: 28px; }
-    .intro p { margin: 8px 0 0; color: var(--muted); max-width: 72ch; }
+    .intro {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: var(--s2);
+      position: relative;
+      overflow: hidden;
+    }
+    /* hero 右上極淡青暈，給空面板一點深度而非純平塗 */
+    .intro::after {
+      content: "";
+      position: absolute;
+      right: -40px; top: -60px;
+      width: 220px; height: 220px;
+      background: radial-gradient(circle at center, var(--accent-soft), transparent 70%);
+      opacity: .7;
+      pointer-events: none;
+    }
+    .intro h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: var(--fs-display);
+      line-height: var(--lh-tight);
+      letter-spacing: -.02em;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .intro p { margin: 0; color: var(--muted); max-width: 60ch; font-size: var(--fs-body); }
+    .eyebrow {
+      font-family: var(--display);
+      font-size: var(--fs-micro);
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--accent-strong);
+      font-weight: 600;
+    }
     .exam-roadmap {
-      margin-bottom: 18px;
+      margin-bottom: var(--s4);
     }
     .goal-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin: 12px 0;
+      gap: var(--s3);
+      margin: var(--s4) 0;
     }
     .goal-box {
-      padding: 12px;
+      padding: var(--s3) var(--s3) var(--s4);
       border: 1px solid var(--line);
-      border-radius: var(--radius);
+      border-radius: var(--r-md);
       background: var(--panel-2);
+      border-top: 2px solid var(--accent-line);
     }
-    .goal-box b { display: block; font-size: 14px; }
-    .goal-box span { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .goal-box b { display: block; font-size: var(--fs-small); font-weight: 600; color: var(--ink); }
+    .goal-box span { display: block; color: var(--muted); font-size: 12px; margin-top: 6px; line-height: 1.5; }
     .gate-strip {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin: 12px 0;
+      gap: var(--s2);
+      margin: var(--s4) 0;
+      counter-reset: gate;
     }
     .gate {
-      border-left: 4px solid var(--strong);
-      padding: 8px 10px;
-      background: var(--strong-soft);
-      border-radius: 6px;
-      color: var(--ink);
+      padding: 10px 12px 11px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: var(--r-md);
+      color: var(--ink-2);
       font-size: 12px;
+      line-height: 1.5;
+      position: relative;
     }
-    .gate b { display: block; font-size: 13px; margin-bottom: 3px; }
+    .gate b { display: block; font-size: var(--fs-small); font-weight: 600; margin-bottom: 4px; color: var(--ink); letter-spacing: .01em; }
     .phase-list {
       display: grid;
-      gap: 12px;
+      gap: var(--s5);
+      margin-top: var(--s5);
     }
     .phase {
       border-top: 1px solid var(--line);
-      padding-top: 12px;
+      padding-top: var(--s4);
     }
-    .phase h3 { margin: 0; font-size: 18px; }
-    .phase p { margin: 4px 0 10px; color: var(--muted); font-size: 13px; }
+    .phase h3 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: var(--fs-h3);
+      font-weight: 600;
+      letter-spacing: -.005em;
+      color: var(--ink);
+    }
+    .phase > p { margin: 6px 0 var(--s3); color: var(--muted); font-size: var(--fs-small); }
     .chapter-list {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
+      gap: var(--s2);
     }
     .exam-chapter {
       border: 1px solid var(--line);
-      border-radius: var(--radius);
+      border-radius: var(--r-md);
       background: var(--panel);
-      padding: 10px;
+      padding: var(--s3);
       display: grid;
       gap: 7px;
+      transition: border-color .18s ease, box-shadow .18s ease;
     }
+    .exam-chapter:hover { box-shadow: var(--shadow-sm); border-color: var(--line-strong); }
     .exam-chapter.done {
-      border-color: var(--strong);
-      background: var(--strong-soft);
+      border-color: var(--accent-line);
+      background: var(--accent-soft);
     }
-    .exam-chapter strong { font-size: 14px; }
-    .exam-chapter span { color: var(--muted); font-size: 12px; }
-    .exam-chapter .chapter-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .exam-chapter strong { font-size: var(--fs-small); font-weight: 600; color: var(--ink); }
+    .exam-chapter span { color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .exam-chapter span b { color: var(--ink-2); font-weight: 600; }
+    .exam-chapter .chapter-actions { display: flex; gap: var(--s2); flex-wrap: wrap; margin-top: 2px; }
     .source-note {
-      margin-top: 12px;
+      margin-top: var(--s4);
+      padding-top: var(--s4);
+      border-top: 1px solid var(--line);
       color: var(--muted);
       font-size: 12px;
     }
-    .source-note a { color: var(--blue); }
+    .source-note a { color: var(--blue); text-decoration-color: color-mix(in srgb, var(--blue) 40%, transparent); text-underline-offset: 2px; }
+    .source-note a:hover { color: var(--accent-strong); }
     .signal-panel {
       display: grid;
-      align-content: center;
-      gap: 8px;
+      align-content: space-between;
+      gap: var(--s3);
       overflow: hidden;
     }
-    .signal-panel svg { width: 100%; height: 120px; display: block; }
-    .wave rect { transform-origin: bottom; animation: idle 1.8s ease-in-out infinite; }
-    .wave rect:nth-child(2) { animation-delay: .1s; }
-    .wave rect:nth-child(3) { animation-delay: .2s; }
-    .wave rect:nth-child(4) { animation-delay: .3s; }
-    .wave rect:nth-child(5) { animation-delay: .4s; }
-    body.speaking .wave rect { animation-duration: .55s; }
-    @keyframes idle {
-      0%, 100% { transform: scaleY(.45); }
+    .signal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--s2);
+    }
+    .signal-head .sig-title {
+      font-size: var(--fs-micro);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    /* 真實狀態指示燈：閒置灰、播放時亮青並脈動 */
+    .sig-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--fs-micro);
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .sig-dot::before {
+      content: "";
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--subtle);
+      transition: background .2s ease;
+    }
+    body.speaking .sig-dot::before {
+      background: var(--accent);
+      box-shadow: 0 0 0 0 var(--accent-soft);
+      animation: pulse 1s ease-out infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+      100% { box-shadow: 0 0 0 8px transparent; }
+    }
+    .signal-panel svg { width: 100%; height: 104px; display: block; }
+    /* 等化器：閒置時靜止扁平（不再無意義亂動），播放中才起伏 */
+    .wave rect { transform-origin: bottom; transform: scaleY(.32); transition: transform .3s ease; }
+    body.speaking .wave rect { animation: bounce 0.6s ease-in-out infinite; }
+    body.speaking .wave rect:nth-child(2) { animation-delay: .12s; }
+    body.speaking .wave rect:nth-child(3) { animation-delay: .04s; }
+    body.speaking .wave rect:nth-child(4) { animation-delay: .18s; }
+    body.speaking .wave rect:nth-child(5) { animation-delay: .08s; }
+    @keyframes bounce {
+      0%, 100% { transform: scaleY(.3); }
       50% { transform: scaleY(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      body.speaking .wave rect { animation: none; transform: scaleY(.6); }
+      body.speaking .sig-dot::before { animation: none; }
     }
     .grid {
       display: grid;
       grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
-      gap: 18px;
+      gap: var(--s4);
       align-items: start;
     }
-    .panel h2, .panel h3 { margin: 0; }
+    /* 顯式統一 .panel 標題字級（原本退回瀏覽器預設、與 .intro h2 不一致） */
+    .panel h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: var(--fs-h2);
+      font-weight: 600;
+      letter-spacing: -.01em;
+      color: var(--ink);
+    }
+    .panel h3 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: var(--fs-h3);
+      font-weight: 600;
+      letter-spacing: -.005em;
+      color: var(--ink);
+    }
     .panel-head {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: var(--s3);
+      margin-bottom: var(--s4);
     }
-    .panel-head p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .panel-head p { margin: 6px 0 0; color: var(--muted); font-size: var(--fs-small); }
     .badge {
       display: inline-flex;
       align-items: center;
       min-height: 24px;
-      padding: 2px 8px;
-      border-radius: 4px;
+      padding: 3px 10px;
+      border-radius: var(--r-pill);
       font-size: 12px;
-      font-weight: 800;
-      background: var(--strong-soft);
-      color: var(--strong);
+      font-weight: 600;
+      letter-spacing: .01em;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      border: 1px solid var(--accent-line);
       white-space: nowrap;
     }
-    .phrase-list { display: grid; gap: 10px; }
+    /* 待辦狀態 badge 走中性灰，與「已完成」的青色 badge 區隔 */
+    .badge-todo {
+      background: var(--bg-tint);
+      color: var(--muted);
+      border-color: var(--line-strong);
+    }
+    .phrase-list { display: grid; gap: var(--s2); }
     .phrase {
       border: 1px solid var(--line);
-      border-radius: var(--radius);
+      border-radius: var(--r-md);
       background: var(--panel);
-      padding: 12px;
+      padding: var(--s3) var(--s4);
       display: grid;
-      gap: 8px;
+      gap: var(--s2);
+      transition: border-color .18s ease, box-shadow .18s ease, transform .12s ease;
     }
-    .phrase.active { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-soft); }
+    .phrase:hover { border-color: var(--line-strong); box-shadow: var(--shadow-sm); }
+    .phrase.active {
+      border-color: var(--accent-line);
+      box-shadow: inset 3px 0 0 var(--accent), var(--shadow-sm);
+    }
     .phrase-top {
       display: flex;
       justify-content: space-between;
-      gap: 10px;
+      gap: var(--s3);
       align-items: flex-start;
     }
-    .phrase-title { font-weight: 800; font-size: 17px; }
-    .phrase-meta { color: var(--muted); font-size: 13px; }
+    .phrase-title { font-weight: 600; font-size: var(--fs-h3); color: var(--ink); letter-spacing: -.005em; line-height: 1.35; }
+    .phrase-meta { color: var(--muted); font-size: var(--fs-small); line-height: 1.5; }
+    .phrase-meta strong { color: var(--ink-2); font-weight: 600; }
     .phrase-actions {
       display: flex;
-      gap: 6px;
+      gap: var(--s2);
       flex-wrap: wrap;
+      margin-top: 2px;
     }
     .quiz-panel {
-      margin-top: 14px;
-      padding-top: 14px;
+      margin-top: var(--s5);
+      padding-top: var(--s5);
       border-top: 1px solid var(--line);
       display: grid;
-      gap: 10px;
+      gap: var(--s3);
     }
     .quiz-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+      gap: var(--s3);
     }
     .quiz-card {
       border: 1px solid var(--line);
-      border-radius: var(--radius);
+      border-radius: var(--r-md);
       background: var(--panel-2);
-      padding: 12px;
+      padding: var(--s4);
       display: grid;
-      gap: 9px;
+      gap: var(--s3);
     }
-    .quiz-question { font-weight: 800; }
+    .quiz-question { font-weight: 600; color: var(--ink); line-height: 1.45; }
     .quiz-options {
       display: grid;
-      gap: 6px;
+      gap: var(--s2);
     }
     .quiz-choice {
       width: 100%;
       text-align: left;
       border: 1px solid var(--line);
-      border-radius: 6px;
+      border-radius: var(--r-sm);
       background: var(--panel);
-      color: var(--ink);
-      padding: 8px 10px;
-      font-size: 13px;
+      color: var(--ink-2);
+      padding: 9px 12px;
+      font-size: var(--fs-small);
+      transition: border-color .15s ease, background .15s ease, color .15s ease;
     }
-    .quiz-choice.ok { border-color: var(--strong); background: var(--strong-soft); color: var(--strong); }
+    .quiz-choice:hover { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-strong); }
+    .quiz-choice.ok { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-strong); font-weight: 600; }
     .quiz-choice.bad { border-color: var(--red); background: var(--red-soft); color: var(--red); }
     .btn {
-      border: 1px solid var(--line);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: 1px solid var(--line-strong);
       background: var(--panel);
       color: var(--ink);
-      border-radius: 6px;
-      padding: 7px 10px;
-      font-size: 13px;
-      font-weight: 700;
+      border-radius: var(--r-sm);
+      padding: 8px 13px;
+      font-size: var(--fs-small);
+      font-weight: 600;
+      letter-spacing: .005em;
+      transition: background .16s ease, border-color .16s ease, transform .1s ease, box-shadow .16s ease, color .16s ease;
     }
-    .btn.primary { background: var(--strong); border-color: var(--strong); color: #fff; }
-    .btn.blue { background: var(--blue); border-color: var(--blue); color: #fff; }
-    .btn.danger { color: var(--red); border-color: var(--red); }
-    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .btn:hover { border-color: var(--ink-2); background: var(--bg-tint); }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fdfefe; box-shadow: var(--shadow-sm); }
+    .btn.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+    .btn.blue { background: var(--blue); border-color: var(--blue); color: #fdfefe; }
+    .btn.blue:hover { background: color-mix(in srgb, var(--blue) 88%, black); border-color: color-mix(in srgb, var(--blue) 88%, black); }
+    .btn.danger { color: var(--red); border-color: color-mix(in srgb, var(--red) 45%, var(--line)); background: transparent; }
+    .btn.danger:hover { background: var(--red-soft); border-color: var(--red); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .btn .ic { width: 15px; height: 15px; flex: none; }
     /* 播放中：播放鈕呈按下態，給「正在播放」回饋並降低連點誤觸 */
-    body.speaking #play-btn { box-shadow: inset 0 0 0 2px var(--blue-soft); filter: brightness(.92); }
+    body.speaking #play-btn { box-shadow: inset 0 0 0 2px rgba(255,255,255,.45); filter: brightness(.94); }
     .lab-title {
       display: flex;
       justify-content: space-between;
-      gap: 12px;
+      gap: var(--s3);
       align-items: start;
-      margin-bottom: 12px;
+      margin-bottom: var(--s4);
     }
     .target {
-      padding: 14px;
-      background: var(--panel-2);
+      padding: var(--s5);
+      background: linear-gradient(180deg, var(--panel-2), color-mix(in srgb, var(--panel-2) 70%, var(--bg)));
       border: 1px solid var(--line);
-      border-radius: var(--radius);
-      margin-bottom: 12px;
+      border-radius: var(--r-md);
+      margin-bottom: var(--s4);
+      position: relative;
     }
     .target .main-text {
-      font-size: 26px;
-      font-weight: 900;
+      font-family: var(--display);
+      font-size: clamp(22px, 1.2rem + 1vw, 28px);
+      font-weight: 600;
       line-height: 1.25;
-      margin-bottom: 4px;
+      letter-spacing: -.01em;
+      margin-bottom: 6px;
+      color: var(--ink);
       word-break: keep-all;
       overflow-wrap: anywhere;
+      transition: filter .25s ease;
     }
     .target.hidden .main-text {
-      filter: blur(7px);
+      filter: blur(8px);
       user-select: none;
     }
-    .roman { color: var(--blue); font-family: var(--mono); font-size: 14px; }
-    .zh { color: var(--muted); margin-top: 4px; }
+    .roman { color: var(--blue); font-family: var(--mono); font-size: var(--fs-small); letter-spacing: .01em; }
+    .zh { color: var(--muted); margin-top: 6px; font-size: var(--fs-small); line-height: 1.5; }
     .controls {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin: 12px 0;
+      gap: var(--s2);
+      margin: var(--s3) 0;
     }
+    .controls .btn { padding-inline: 8px; }
     .dictation {
       display: grid;
-      gap: 8px;
-      margin-top: 14px;
+      gap: var(--s2);
+      margin-top: var(--s5);
     }
+    .dictation label { font-size: var(--fs-small); color: var(--ink-2); }
+    .dictation label strong { color: var(--ink); font-weight: 600; }
     textarea, input[type="text"] {
       width: 100%;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 10px 12px;
-      background: #fff;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r-sm);
+      padding: 11px 13px;
+      background: var(--panel);
       color: var(--ink);
+      font-size: var(--fs-body);
+      transition: border-color .16s ease, box-shadow .16s ease;
     }
-    textarea { min-height: 74px; resize: vertical; }
+    textarea { min-height: 76px; resize: vertical; line-height: 1.5; }
+    input[type="text"]::placeholder, textarea::placeholder { color: var(--subtle); }
     .result {
-      min-height: 36px;
-      padding: 9px 10px;
-      border-radius: var(--radius);
+      min-height: 38px;
+      padding: 10px 12px;
+      border-radius: var(--r-sm);
       background: var(--panel-2);
       color: var(--muted);
-      font-size: 13px;
+      font-size: var(--fs-small);
+      line-height: 1.5;
+      border: 1px solid transparent;
     }
-    .result.ok { background: var(--strong-soft); color: var(--strong); }
-    .result.bad { background: var(--red-soft); color: var(--red); }
+    .result.ok { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent-line); }
+    .result.bad { background: var(--red-soft); color: var(--red); border-color: color-mix(in srgb, var(--red) 30%, transparent); }
     .shadow {
-      margin-top: 14px;
-      padding-top: 14px;
+      margin-top: var(--s5);
+      padding-top: var(--s5);
       border-top: 1px solid var(--line);
     }
+    .shadow > p { font-size: var(--fs-small); color: var(--muted); }
     .rating {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
-      margin-top: 8px;
+      gap: var(--s2);
+      margin-top: var(--s2);
     }
-    .rating button.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .rating button { font-family: var(--display); font-weight: 600; }
+    .rating button.active { background: var(--accent); border-color: var(--accent); color: #fdfefe; box-shadow: var(--shadow-sm); }
     .progress-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-      margin-bottom: 12px;
+      gap: var(--s3);
+      margin-bottom: var(--s4);
     }
     .metric {
-      padding: 12px;
+      padding: var(--s4);
       background: var(--panel-2);
       border: 1px solid var(--line);
-      border-radius: var(--radius);
+      border-radius: var(--r-md);
     }
-    .metric b { display: block; font-size: 23px; font-family: var(--mono); }
-    .metric span { color: var(--muted); font-size: 12px; }
-    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .metric b { display: block; font-size: 26px; font-family: var(--display); font-weight: 600; letter-spacing: -.02em; color: var(--ink); line-height: 1.1; }
+    .metric span { color: var(--muted); font-size: 12px; margin-top: 3px; display: block; }
+    .chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
     .chip {
       border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 4px 9px;
-      background: #fff;
+      border-radius: var(--r-pill);
+      padding: 5px 11px;
+      background: var(--panel);
       font-size: 12px;
       color: var(--muted);
+      line-height: 1.4;
     }
     /* 可點 chip：拉高點擊區並給可按線索，與被動標籤 chip 區隔 */
     .chip-action {
       min-height: 36px;
-      padding: 8px 12px;
-      color: var(--ink);
+      padding: 8px 13px;
+      color: var(--ink-2);
+      transition: border-color .16s ease, background .16s ease, color .16s ease;
     }
-    .chip-action:hover { border-color: var(--blue); color: var(--ink); }
+    .chip-action:hover { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-strong); }
+    .chip-action:active { transform: translateY(1px); }
     @media (max-width: 560px) {
       .chip-action { min-height: 40px; }
     }
     .daily-plan {
-      margin: 12px 0 16px;
-      padding: 12px;
+      margin: var(--s4) 0 var(--s5);
+      padding: var(--s4);
       border: 1px solid var(--line);
-      border-radius: var(--radius);
+      border-radius: var(--r-md);
       background: var(--panel-2);
     }
-    .daily-plan h3 { margin-bottom: 8px; }
+    .daily-plan h3 { margin-bottom: var(--s3); }
     .plan-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
+      gap: var(--s2);
+      counter-reset: step;
     }
     .plan-step {
-      min-height: 92px;
-      padding: 10px;
+      min-height: 96px;
+      padding: var(--s3);
       border: 1px solid var(--line);
-      border-radius: 6px;
+      border-radius: var(--r-sm);
       background: var(--panel);
       display: grid;
       align-content: start;
-      gap: 4px;
+      gap: var(--s1);
     }
-    .plan-step b { font-size: 13px; }
-    .plan-step span { color: var(--muted); font-size: 12px; }
+    .plan-step b { font-size: var(--fs-small); font-weight: 600; color: var(--ink); }
+    .plan-step span { color: var(--muted); font-size: 12px; line-height: 1.45; }
     .voice {
       color: var(--muted);
       font-size: 12px;
+      line-height: 1.5;
     }
     .footer-tools {
       display: flex;
-      gap: 8px;
+      gap: var(--s2);
       flex-wrap: wrap;
-      margin-top: 12px;
+      margin-top: var(--s4);
     }
     .notice {
-      padding: 10px 12px;
+      padding: 11px 13px;
       background: var(--warn-soft);
-      border: 1px solid #f1c27d;
-      color: #7c3e08;
-      border-radius: var(--radius);
-      font-size: 13px;
-      margin-top: 10px;
+      border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--line));
+      color: #6f4d12;
+      border-radius: var(--r-md);
+      font-size: var(--fs-small);
+      line-height: 1.5;
+      margin-top: var(--s3);
     }
+    /* section 之間的標題與堆疊節奏 */
+    .progress-section h3 { margin: var(--s5) 0 var(--s3); font-family: var(--display); font-size: var(--fs-h3); font-weight: 600; color: var(--ink); }
+    #export-box { margin-top: var(--s4); }
+    .skip-link {
+      position: absolute;
+      left: -999px;
+      top: 8px;
+      z-index: 20;
+      background: var(--accent);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: var(--r-sm);
+      font-size: var(--fs-small);
+      font-weight: 600;
+    }
+    .skip-link:focus { left: 8px; }
     @media (max-width: 980px) {
       .app { grid-template-columns: 1fr; }
       aside { position: relative; height: auto; }
@@ -511,7 +787,7 @@
       .controls, .progress-grid, .quiz-grid, .plan-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 560px) {
-      main { padding: 14px; }
+      main { padding: var(--s4) var(--s4) var(--s6); }
       .track-list {
         display: flex;
         overflow-x: auto;
@@ -522,80 +798,105 @@
         min-width: 260px;
         scroll-snap-align: start;
       }
-      .intro h2 { font-size: 22px; }
-      .target .main-text { font-size: 21px; }
       .controls, .progress-grid, .rating, .quiz-grid, .plan-grid, .goal-grid, .gate-strip, .chapter-list { grid-template-columns: 1fr; }
       .phrase-top, .lab-title, .panel-head { display: block; }
-      .phrase-actions { margin-top: 8px; }
+      .phrase-top .badge, .lab-title .badge, .panel-head .badge { margin-top: var(--s2); }
+      .phrase-actions { margin-top: var(--s2); }
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0f172a;
-        --panel: #172033;
-        --panel-2: #111827;
-        --ink: #f8fafc;
-        --muted: #b5c0d0;
-        --subtle: #748094;
-        --line: #2f3b52;
-        --strong-soft: #123b36;
-        --blue-soft: #172c58;
-        --red-soft: #4a1524;
-        --warn-soft: #3a2713;
+        /* 冷中性深藍灰一族（單一色相，不混雜） */
+        --bg: #0e131c;
+        --bg-tint: #131a26;
+        --panel: #161d2a;
+        --panel-2: #111925;
+        --ink: #eef2f7;
+        --ink-2: #c2ccd9;
+        --muted: #93a0b2;
+        --subtle: #61708a;
+        --line: #28323f;
+        --line-strong: #36424f;
+
+        --accent: #50b3a3;
+        --accent-strong: #6cc6b7;
+        --accent-soft: #16302d;
+        --accent-line: #2c5a52;
+        --blue: #6ea0d2;
+        --blue-soft: #18283f;
+        --red: #e07d8c;
+        --red-soft: #391821;
+        --warn: #d9a441;
+        --warn-soft: #2f2512;
+
+        --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+        --shadow-md: 0 8px 24px -10px rgba(0,0,0,.6);
+        --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+        --sidebar: #0b1119;
+        --sidebar-2: #070b11;
       }
-      textarea, input[type="text"], .chip { background: #0f172a; color: var(--ink); }
+      body { background-image: radial-gradient(at 12% 0%, var(--bg-tint) 0px, transparent 55%); }
+      textarea, input[type="text"], .chip { background: var(--panel-2); color: var(--ink); }
+      .target { background: linear-gradient(180deg, var(--panel-2), #0e1521); }
+      .btn.primary, .btn.blue, .rating button.active { color: #07110f; }
       /* 深色模式語音警告：亮黃字 + 較深暖邊框，確保錯誤訊息可讀(對比 ≥4.5:1) */
-      .notice { color: #fcd34d; border-color: #7c5a1e; }
-      /* 深色側欄與主畫面幾乎同色，補一條右邊界讓雙欄結構不塌 */
-      aside { border-right: 1px solid var(--line); }
+      .notice { color: #f2c75a; border-color: #6a521f; }
+    }
+    @media print {
+      aside, .signal-panel, .footer-tools, .controls, .phrase-actions, .chapter-actions { display: none; }
+      .app { grid-template-columns: 1fr; }
+      body { background: #fff; }
     }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">跳到主要內容</a>
   <div class="app">
-    <aside>
+    <aside aria-label="課程導覽">
       <div class="brand">
-        <div class="brand-mark">LA</div>
+        <div class="brand-mark" aria-hidden="true">LA</div>
         <div>
           <h1>LANG</h1>
           <p>美語與日語考試自學</p>
         </div>
       </div>
 
-      <div class="side-label">Language</div>
-      <div class="seg" id="language-tabs">
-        <button data-lang="en" class="active">美語</button>
-        <button data-lang="ja">日語</button>
+      <div class="side-label">語言</div>
+      <div class="seg" id="language-tabs" role="tablist" aria-label="切換語言">
+        <button data-lang="en" class="active" role="tab" aria-selected="true">美語</button>
+        <button data-lang="ja" role="tab" aria-selected="false">日語</button>
       </div>
 
-      <div class="side-label">Listening Labs</div>
-      <div class="track-list" id="track-list"></div>
+      <div class="side-label">聽力課程</div>
+      <nav class="track-list" id="track-list" aria-label="課程清單"></nav>
 
-      <div class="side-label">Progress</div>
+      <div class="side-label">學習進度</div>
       <div class="side-stat">
         <div><b id="side-done">0</b><span>完成短句</span></div>
         <div><b id="side-acc">0%</b><span>聽寫正確率</span></div>
       </div>
-      <div class="notice" id="speech-warning" hidden></div>
+      <div class="notice" id="speech-warning" role="alert" hidden></div>
     </aside>
 
-    <main>
+    <main id="main-content">
       <section class="top">
         <div class="intro">
+          <span class="eyebrow">考試通關 × 聽力實驗室</span>
           <h2 id="course-title">LANG 美語與日語自學系統</h2>
           <p id="course-desc">用考試通關路線安排完整章節，再用聽力實驗室反覆聽、聽寫、跟讀。</p>
         </div>
-        <div class="signal-panel" aria-label="Listening signal">
-          <svg viewBox="0 0 260 130" role="img" aria-label="Listening waveform">
-            <rect x="6" y="8" width="248" height="114" rx="8" fill="var(--panel-2)" stroke="var(--line)"/>
-            <g class="wave" fill="var(--strong)">
-              <rect x="42" y="42" width="18" height="56" rx="5"/>
-              <rect x="74" y="28" width="18" height="84" rx="5"/>
-              <rect x="106" y="52" width="18" height="38" rx="5"/>
-              <rect x="138" y="20" width="18" height="94" rx="5"/>
-              <rect x="170" y="38" width="18" height="64" rx="5"/>
+        <div class="signal-panel" aria-label="語音播放狀態">
+          <div class="signal-head">
+            <span class="sig-title" id="sig-lang">美語 · en-US</span>
+            <span class="sig-dot" id="sig-status">待命</span>
+          </div>
+          <svg viewBox="0 0 220 104" role="img" aria-hidden="true">
+            <g class="wave" fill="var(--accent)">
+              <rect x="14"  y="4" width="20" height="96" rx="6"/>
+              <rect x="54"  y="4" width="20" height="96" rx="6"/>
+              <rect x="94"  y="4" width="20" height="96" rx="6"/>
+              <rect x="134" y="4" width="20" height="96" rx="6"/>
+              <rect x="174" y="4" width="20" height="96" rx="6"/>
             </g>
-            <text x="32" y="24" fill="var(--muted)" font-size="13" font-family="monospace">listen</text>
-            <text x="184" y="112" fill="var(--blue)" font-size="15" font-family="monospace">A / あ</text>
           </svg>
           <div class="voice" id="voice-status">偵測語音中...</div>
         </div>
@@ -644,20 +945,20 @@
           </div>
 
           <div class="controls">
-            <button class="btn primary" id="play-btn">Play</button>
-            <button class="btn" id="slow-btn">Slow</button>
-            <button class="btn" id="loop-btn">Loop x3</button>
+            <button class="btn primary" id="play-btn"><svg class="ic" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 5.5v13l11-6.5z" fill="currentColor"/></svg>播放</button>
+            <button class="btn" id="slow-btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>放慢</button>
+            <button class="btn" id="loop-btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9a5 5 0 0 1 5-5h7l-2.5-2.5M20 15a5 5 0 0 1-5 5H8l2.5 2.5"/></svg>循環 ×3</button>
           </div>
           <div class="controls">
-            <button class="btn" id="reveal-btn">Reveal text</button>
-            <button class="btn" id="done-btn">Mark done</button>
-            <button class="btn" id="fav-btn">Save hard phrase</button>
+            <button class="btn" id="reveal-btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg><span class="lbl">顯示原文</span></button>
+            <button class="btn" id="done-btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg><span class="lbl">標記完成</span></button>
+            <button class="btn" id="fav-btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4.5 14.3 9l5 .7-3.6 3.5.9 5L12 15.8 7.4 18.2l.9-5L4.7 9.7l5-.7z"/></svg><span class="lbl">收藏難句</span></button>
           </div>
 
           <div class="dictation">
             <label for="dictation-input"><strong>聽寫</strong> <span class="voice">美語輸入英文；日語可輸入日文或 romaji。</span></label>
             <input type="text" id="dictation-input" autocomplete="off" placeholder="聽完後輸入你聽到的內容">
-            <button class="btn blue" id="check-btn">Check dictation</button>
+            <button class="btn blue" id="check-btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg>檢查聽寫</button>
             <div class="result" id="dictation-result">等待作答。</div>
           </div>
 
@@ -669,13 +970,13 @@
         </div>
       </section>
 
-      <section class="panel" style="margin-top:18px;">
+      <section class="panel progress-section" style="margin-top:var(--s4);">
         <div class="panel-head">
           <div>
             <h2>學習紀錄</h2>
             <p>完成、聽寫與跟讀分數會保存在這台瀏覽器。</p>
           </div>
-          <span class="badge" id="session-label">Today</span>
+          <span class="badge" id="session-label">本機</span>
         </div>
         <div class="progress-grid">
           <div class="metric"><b id="metric-total">0</b><span>總短句</span></div>
@@ -690,8 +991,8 @@
         <h3>收藏的難句</h3>
         <div class="chips" id="favorite-list"></div>
         <div class="footer-tools">
-          <button class="btn primary" id="copy-md-btn">Copy study log as Markdown</button>
-          <button class="btn danger" id="reset-btn">Reset progress</button>
+          <button class="btn primary" id="copy-md-btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>複製學習紀錄（Markdown）</button>
+          <button class="btn danger" id="reset-btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M7 7l1 12h8l1-12"/></svg>清除進度</button>
         </div>
         <textarea id="export-box" readonly placeholder="匯出的 Markdown 會出現在這裡。"></textarea>
       </section>
@@ -1275,6 +1576,8 @@
     let state = loadState();
     let voices = [];
     let revealText = false;
+    // 記錄最近一次播放速度，供等化器狀態列顯示
+    let lastRate = 1;
     // 使用者是否已主動進入盲聽(選句/播放/跟讀)；未進入前聽力卡顯示引導文案而非模糊空狀態
     let hasEngaged = false;
 
@@ -1348,15 +1651,16 @@
           return;
         }
         window.speechSynthesis.cancel();
+        lastRate = rate;
         const u = new SpeechSynthesisUtterance(text);
         u.lang = course().speechLang;
         u.rate = rate;
         u.pitch = state.lang === "ja" ? 1.02 : 1;
         const v = bestVoice(course().speechLang);
         if (v) u.voice = v;
-        u.onstart = () => document.body.classList.add("speaking");
-        u.onend = () => { document.body.classList.remove("speaking"); resolve(); };
-        u.onerror = (e) => { document.body.classList.remove("speaking"); reject(e); };
+        u.onstart = () => { document.body.classList.add("speaking"); setSignalStatus(true, rate); };
+        u.onend = () => { document.body.classList.remove("speaking"); setSignalStatus(false); resolve(); };
+        u.onerror = (e) => { document.body.classList.remove("speaking"); setSignalStatus(false); reject(e); };
         window.speechSynthesis.speak(u);
       });
     }
@@ -1516,7 +1820,7 @@
                   <span><b>練習：</b>${ch.practice}</span>
                   <span><b>門檻：</b>${ch.gate}</span>
                   <div class="chapter-actions">
-                    <button class="btn ${completed ? "primary" : ""}" data-exam-done="${ch.id}">${completed ? "Done" : "Mark chapter done"}</button>
+                    <button class="btn ${completed ? "primary" : ""}" data-exam-done="${ch.id}">${completed ? "已完成本章" : "標記本章完成"}</button>
                   </div>
                 </article>
               `;
@@ -1551,14 +1855,14 @@
                 ${p.roman ? `<div class="roman">${p.roman}</div>` : ""}
                 <div class="phrase-meta">${idx + 1}. ${p.zh}</div>
               </div>
-              <span class="badge">${done ? "Done" : "Listen"}</span>
+              <span class="badge ${done ? "" : "badge-todo"}">${done ? "已完成" : "待聽"}</span>
             </div>
             <div class="phrase-meta"><strong>聽力焦點：</strong>${p.focus} <span class="voice">抓音：${p.listenFor}</span></div>
             <div class="phrase-actions">
-              <button class="btn" data-select="${p.id}">Select</button>
-              <button class="btn" data-play="${p.id}">Play</button>
-              <button class="btn" data-done="${p.id}">${done ? "Done" : "Mark done"}</button>
-              <button class="btn" data-fav="${p.id}">${fav ? "Saved" : "Save hard phrase"}</button>
+              <button class="btn" data-select="${p.id}">選取</button>
+              <button class="btn" data-play="${p.id}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5.5v13l11-6.5z" fill="currentColor"/></svg>播放</button>
+              <button class="btn" data-done="${p.id}">${done ? "已完成" : "標記完成"}</button>
+              <button class="btn" data-fav="${p.id}">${fav ? "已收藏" : "收藏難句"}</button>
             </div>
           </article>
         `;
@@ -1634,9 +1938,9 @@
       const res = document.getElementById("dictation-result");
       res.className = "result";
       res.textContent = "等待作答。";
-      document.getElementById("done-btn").textContent = state.completed[p.id] ? "Done" : "Mark done";
-      document.getElementById("fav-btn").textContent = state.favorites[p.id] ? "Saved hard phrase" : "Save hard phrase";
-      document.getElementById("reveal-btn").textContent = revealText ? "Hide text" : "Reveal text";
+      document.querySelector("#done-btn .lbl").textContent = state.completed[p.id] ? "已完成" : "標記完成";
+      document.querySelector("#fav-btn .lbl").textContent = state.favorites[p.id] ? "已收藏" : "收藏難句";
+      document.querySelector("#reveal-btn .lbl").textContent = revealText ? "隱藏原文" : "顯示原文";
       renderRating();
     }
 
@@ -1679,9 +1983,9 @@
       const fallback = target.length ? target : all.slice(0, 5);
       const plan = [
         { title: "1. 盲聽", text: "不看字聽 2 回，先抓重音與關鍵詞。" },
-        { title: "2. 慢聽", text: "用 Slow 對齊弱化音、長音或促音。" },
+        { title: "2. 慢聽", text: "用「放慢」對齊弱化音、長音或促音。" },
         { title: "3. 聽寫", text: "輸入聽到的內容，錯了立刻重聽。" },
-        { title: "4. 跟讀", text: "Loop x3 後自評 1-5 分。" },
+        { title: "4. 跟讀", text: "循環 ×3 後自評 1-5 分。" },
         { title: "5. 回收", text: "重做錯題與收藏難句。" }
       ];
       const box = document.getElementById("daily-plan");
@@ -1729,6 +2033,22 @@
       const v = bestVoice(course().speechLang);
       const text = v ? `語音：${v.name} (${v.lang})` : `尚未找到 ${course().speechLang} voice；瀏覽器可能仍可用預設語音。`;
       document.getElementById("voice-status").textContent = text;
+      const sigLang = document.getElementById("sig-lang");
+      if (sigLang) sigLang.textContent = `${course().name} · ${course().speechLang}`;
+      setSignalStatus(document.body.classList.contains("speaking"));
+    }
+
+    // 等化器面板的狀態列：反映真實播放狀態與速度，取代寫死的裝飾文字
+    function setSignalStatus(speaking, rate) {
+      const el = document.getElementById("sig-status");
+      if (!el) return;
+      if (speaking) {
+        const r = rate || lastRate;
+        const label = r <= .75 ? "慢速播放" : r >= 1 ? "播放中" : "跟讀播放";
+        el.textContent = label + " · ×" + r.toFixed(2).replace(/\.?0+$/, "");
+      } else {
+        el.textContent = "待命";
+      }
     }
 
     function showSpeechWarning(err) {
@@ -1736,6 +2056,7 @@
       el.hidden = false;
       el.textContent = "語音播放失敗。請確認瀏覽器支援 speechSynthesis，或換 Chrome/Edge 測試。" + (err && err.message ? " " + err.message : "");
       document.body.classList.remove("speaking");
+      setSignalStatus(false);
     }
 
     function copyMarkdown() {
